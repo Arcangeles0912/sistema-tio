@@ -22,12 +22,17 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
   const [startDate, setStartDate] = useState(getTodayString());
   const [endDate, setEndDate] = useState(getTodayString());
 
+  const parseLocalDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Filter sales and expenses by period (inclusive of whole days)
   const filteredData = useMemo(() => {
-    const start = new Date(startDate);
+    const start = parseLocalDate(startDate);
     start.setHours(0, 0, 0, 0);
 
-    const end = new Date(endDate);
+    const end = parseLocalDate(endDate);
     end.setHours(23, 59, 59, 999);
 
     const periodSales = sales.filter(sale => {
@@ -79,9 +84,9 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
       startStr = todayStr;
       endStr = todayStr;
 
-      const start = new Date(todayStr);
+      const start = parseLocalDate(todayStr);
       start.setHours(0, 0, 0, 0);
-      const end = new Date(todayStr);
+      const end = parseLocalDate(todayStr);
       end.setHours(23, 59, 59, 999);
 
       const periodSales = sales.filter(sale => {
@@ -217,8 +222,8 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
               <div class="receipt-title">CUADRE DE CAJA</div>
               
               <div class="receipt-info">
-                <p><span>F. Inicio:</span> <span>${new Date(startStr + 'T00:00:00').toLocaleDateString('es-DO')}</span></p>
-                <p><span>F. Fin:</span> <span>${new Date(endStr + 'T23:59:59').toLocaleDateString('es-DO')}</span></p>
+                <p><span>F. Inicio:</span> <span>${parseLocalDate(startStr).toLocaleDateString('es-DO')}</span></p>
+                <p><span>F. Fin:</span> <span>${parseLocalDate(endStr).toLocaleDateString('es-DO')}</span></p>
                 <p><span>Impreso:</span> <span>${new Date().toLocaleDateString('es-DO')} ${new Date().toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</span></p>
                 <p><span>Usuario:</span> <span>${currentUser?.name}</span></p>
               </div>
