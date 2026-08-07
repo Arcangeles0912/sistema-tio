@@ -36,16 +36,18 @@ Write-Host "[1.5/3] Generando version del control de cambios..." -ForegroundColo
 $packageJson = Get-Content -Raw -Path "package.json" | ConvertFrom-Json
 $version = $packageJson.version
 $gitHash = ""
+$commitCount = ""
 $isDirty = $false
 if (Get-Command git -ErrorAction SilentlyContinue) {
     $gitHash = (git rev-parse --short HEAD 2>$null)
     if ($gitHash) {
+        $commitCount = (git rev-list --count HEAD 2>$null).Trim()
         $status = (git status --porcelain 2>$null)
         if ($status) { $isDirty = $true }
     }
 }
 if ($gitHash) {
-    $appVersion = "$version-$gitHash"
+    $appVersion = "$version.b$commitCount-$gitHash"
     if ($isDirty) { $appVersion += "-dirty" }
 } else {
     $appVersion = $version
