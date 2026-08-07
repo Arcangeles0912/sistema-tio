@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fade-in-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.5s ease-out forwards;
+}
+
+/* Login Animations */
+@keyframes float {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes float-delayed {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(-30px, 50px) scale(1.2); }
+  66% { transform: translate(20px, -20px) scale(0.8); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 12s ease-in-out infinite;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.login-bg-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Hotel Specific Animations */
+@keyframes cloud-move {
+  0% { transform: translateX(0); opacity: 0.2; }
+  50% { transform: translateX(20px); opacity: 0.4; }
+  100% { transform: translateX(0); opacity: 0.2; }
+}
+
+@keyframes guest-enter-left {
+  0% { transform: translateX(-50px); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(140px); opacity: 0; } /* Moves to center door */
+}
+
+@keyframes guest-enter-right {
+  0% { transform: translateX(350px); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(160px); opacity: 0; } /* Moves to center door */
+}
+
+@keyframes window-flicker {
+  0%, 100% { fill: #1e293b; } /* Dark */
+  50% { fill: #fbbf24; } /* Gold/Light */
+}
+
+.animate-cloud {
+  animation: cloud-move 20s ease-in-out infinite;
+}
+
+.animate-guest-left {
+  animation: guest-enter-left 6s linear infinite;
+}
+
+.animate-guest-right {
+  animation: guest-enter-right 7s linear infinite;
+}
+
+.animate-window-1 { animation: window-flicker 8s infinite 1s; }
+.animate-window-2 { animation: window-flicker 12s infinite 3s; }
+.animate-window-3 { animation: window-flicker 7s infinite 0s; }
+.animate-window-4 { animation: window-flicker 15s infinite 5s; }
+.animate-window-5 { animation: window-flicker 10s infinite 2s; }

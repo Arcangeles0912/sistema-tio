@@ -1,0 +1,15 @@
+node_modules
+build
+.git
+.gitignore
+deploy-local.bat
+deploy-local.ps1
+stop-local.bat
+stop-local.ps1
+README.md
+npm-debug.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: levelblack-db
+    restart: always
+    environment:
+      POSTGRES_DB: levelblack
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: levelblack_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: levelblack-app
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8080:3001"
+    environment:
+      - PORT=3001
+      - DATABASE_URL=postgres://postgres:levelblack_password@db:5432/levelblack
+    volumes:
+      - uploads-data:/usr/src/app/uploads
+
+volumes:
+  pgdata:
+  uploads-data:
