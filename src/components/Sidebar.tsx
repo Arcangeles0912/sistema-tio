@@ -132,8 +132,8 @@ export default function Sidebar({ user, currentView, setCurrentView, onLogout, i
                 <LogoutIcon className="h-4 w-4 mr-2" />
                 Cerrar Sesión
             </button>
-            <div className="text-center mt-3 text-[10px] text-slate-600">
-                v{process.env.REACT_APP_VERSION} &copy; LevelBlack
+            <div className="text-center mt-3 text-xs text-slate-400 font-mono font-bold bg-slate-950/60 py-1.5 rounded border border-slate-800 shadow-inner">
+                v{process.env.REACT_APP_VERSION}
             </div>
         </div>
       </div>

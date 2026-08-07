@@ -185,9 +185,11 @@ const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onRegister
                 Inicia Sesión
             </button>
         </p>
-      </div>
-       <div className="absolute bottom-4 right-4 text-xs text-slate-500">
-        Versión {process.env.REACT_APP_VERSION}
+        {process.env.REACT_APP_VERSION && (
+          <div className="text-center mt-6 text-slate-400 text-[10px] font-mono opacity-75">
+            v{process.env.REACT_APP_VERSION}
+          </div>
+        )}
       </div>
     </div>
   );

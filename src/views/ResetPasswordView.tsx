@@ -102,6 +102,11 @@ const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({ token, onResetSuc
             </button>
           </div>
         </form>
+        {process.env.REACT_APP_VERSION && (
+          <div className="text-center mt-6 text-slate-400 text-[10px] font-mono opacity-75">
+            v{process.env.REACT_APP_VERSION}
+          </div>
+        )}
       </div>
     </div>
   );
