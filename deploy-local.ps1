@@ -31,6 +31,29 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "[OK] Docker se esta ejecutando correctamente." -ForegroundColor Green
 Write-Host ""
 
+# 2.5 Generar archivo de versionamiento (.env) para el frontend
+Write-Host "[1.5/3] Generando version del control de cambios..." -ForegroundColor Cyan
+$packageJson = Get-Content -Raw -Path "package.json" | ConvertFrom-Json
+$version = $packageJson.version
+$gitHash = ""
+$isDirty = $false
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $gitHash = (git rev-parse --short HEAD 2>$null)
+    if ($gitHash) {
+        $status = (git status --porcelain 2>$null)
+        if ($status) { $isDirty = $true }
+    }
+}
+if ($gitHash) {
+    $appVersion = "$version-$gitHash"
+    if ($isDirty) { $appVersion += "-dirty" }
+} else {
+    $appVersion = $version
+}
+"REACT_APP_VERSION=$appVersion" | Out-File -FilePath ".env" -Encoding utf8
+Write-Host "[OK] Version de la aplicacion: $appVersion (guardada en .env)" -ForegroundColor Green
+Write-Host ""
+
 # 3. Compilar y levantar la aplicación
 Write-Host "[2/3] Construyendo e iniciando contenedores (Docker Compose)..." -ForegroundColor Cyan
 Write-Host "Esto puede tomar unos minutos la primera vez..." -ForegroundColor Gray
