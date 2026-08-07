@@ -93,6 +93,51 @@ const createTables = async (client) => {
   `);
 };
 
+const addColumnIfNotExists = async (client, tableName, columnName, columnDefinition) => {
+    const checkRes = await client.query(`
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = $1 AND column_name = $2
+    `, [tableName, columnName]);
+    if (checkRes.rowCount === 0) {
+        await client.query(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+        console.log(`  [MIGRACIÓN] Agregada columna '${columnName}' a la tabla '${tableName}'.`);
+    }
+};
+
+const runMigrations = async (client) => {
+    console.log('Ejecutando verificaciones de compatibilidad de base de datos...');
+    
+    // organizations columns
+    await addColumnIfNotExists(client, 'organizations', 'plan', "plan_type NOT NULL DEFAULT 'free'");
+    await addColumnIfNotExists(client, 'organizations', 'created_at', 'TIMESTAMPTZ DEFAULT NOW()');
+    await addColumnIfNotExists(client, 'organizations', 'plan_upgrade_status', "plan_status DEFAULT 'active'");
+    await addColumnIfNotExists(client, 'organizations', 'corporate_user_limit', 'INTEGER');
+    await addColumnIfNotExists(client, 'organizations', 'plan_trial_cooldown_until', 'TIMESTAMPTZ');
+
+    // users columns
+    await addColumnIfNotExists(client, 'users', 'is_active', 'BOOLEAN DEFAULT TRUE');
+    await addColumnIfNotExists(client, 'users', 'is_confirmed', 'BOOLEAN DEFAULT FALSE');
+    await addColumnIfNotExists(client, 'users', 'schedule', "user_schedule NOT NULL DEFAULT 'Completo'");
+    await addColumnIfNotExists(client, 'users', 'active_session_id', 'VARCHAR(255)');
+    await addColumnIfNotExists(client, 'users', 'has_completed_onboarding', 'BOOLEAN DEFAULT FALSE NOT NULL');
+
+    // sale_items columns
+    await addColumnIfNotExists(client, 'sale_items', 'plate_number', 'VARCHAR(50)');
+    await addColumnIfNotExists(client, 'sale_items', 'item_type', 'VARCHAR(20)');
+    await addColumnIfNotExists(client, 'sale_items', 'item_id', 'INTEGER');
+
+    // expenses columns
+    await addColumnIfNotExists(client, 'expenses', 'type', 'VARCHAR(50)');
+    await addColumnIfNotExists(client, 'expenses', 'date', 'TIMESTAMPTZ DEFAULT NOW()');
+
+    // Track the current schema version in settings
+    await client.query(`
+        INSERT INTO settings (organization_id, setting_key, setting_value)
+        VALUES (1, 'schema_version', '2.1.0')
+        ON CONFLICT (organization_id, setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value
+    `);
+};
+
 const ensureAdminAccess = async (client) => {
     console.log('Sincronizando Sistema y Super Usuario...');
     try {
@@ -180,9 +225,10 @@ const initializeDatabase = async () => {
   try {
       await client.query('BEGIN');
       await createTables(client);
+      await runMigrations(client);
       await ensureAdminAccess(client);
       await client.query('COMMIT');
-      console.log('Base de Datos preparada y blindada.');
+      console.log('Base de Datos preparada, migrada y blindada.');
   } catch (err) {
       if (client) await client.query('ROLLBACK');
       throw err;
