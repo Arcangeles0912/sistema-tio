@@ -230,7 +230,10 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onSwitchToForgotPassw
           </div>
           
           <div className="text-center mt-6 text-slate-400 text-xs">
-            &copy; {new Date().getFullYear()} LevelBlack CRM. Todos los derechos reservados.
+            <p>&copy; {new Date().getFullYear()} LevelBlack CRM. Todos los derechos reservados.</p>
+            {process.env.REACT_APP_VERSION && (
+              <p className="mt-1 text-[10px] text-slate-400 opacity-75 font-mono">v{process.env.REACT_APP_VERSION}</p>
+            )}
           </div>
         </div>
       </div>
