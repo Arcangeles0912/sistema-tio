@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { formatCurrency } from '../utils';
 
@@ -9,7 +9,6 @@ interface CashCloseModalProps {
 
 const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
   const { sales, expenses, currentUser, settings } = useAppContext();
-  const reportRef = useRef<HTMLDivElement>(null);
 
   // Default dates to today's date in local YYYY-MM-DD
   const getTodayString = () => {
