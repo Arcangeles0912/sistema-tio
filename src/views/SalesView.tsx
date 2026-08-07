@@ -5,6 +5,7 @@ import { TrashIcon } from '../components/icons';
 import InvoiceModal from '../components/InvoiceModal';
 import PlateInputModal from '../components/PlateInputModal';
 import DailySalesModal from '../components/DailySalesModal';
+import CashCloseModal from '../components/CashCloseModal';
 import { formatCurrency } from '../utils';
 
 const SalesView: React.FC = () => {
@@ -15,6 +16,7 @@ const SalesView: React.FC = () => {
   
   const [isPlateModalOpen, setIsPlateModalOpen] = useState(false);
   const [isDailySalesModalOpen, setIsDailySalesModalOpen] = useState(false);
+  const [isCashCloseModalOpen, setIsCashCloseModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -33,19 +35,26 @@ const SalesView: React.FC = () => {
     setIsPlateModalOpen(true);
   };
   
-  const handleConfirmPlate = (plateNumber: string, isAmanecida: boolean) => {
+  const handleConfirmPlate = (plateNumber: string, isAmanecida: boolean, additionalPrice: number) => {
     if (selectedRoom) {
-      const finalPrice = isAmanecida ? selectedRoom.price * 1.20 : selectedRoom.price;
-      const finalName = isAmanecida 
-        ? `Habitación ${selectedRoom.number} (Amanecida)` 
-        : `Habitación ${selectedRoom.number}`;
+      const baseRoomPrice = Number(selectedRoom.price);
+      const priceBeforeAmanecida = baseRoomPrice + additionalPrice;
+      const finalPrice = isAmanecida ? priceBeforeAmanecida * 1.20 : priceBeforeAmanecida;
+      
+      let finalName = `Habitación ${selectedRoom.number}`;
+      if (additionalPrice > 0) {
+        finalName += ` (+${additionalPrice})`;
+      }
+      if (isAmanecida) {
+        finalName += ` (Amanecida)`;
+      }
 
       addToCart({
         id: selectedRoom.id,
         name: finalName,
         price: finalPrice,
         type: 'room',
-        plateNumber: plateNumber,
+        plateNumber: plateNumber || undefined,
       });
     }
     setIsPlateModalOpen(false);
@@ -73,7 +82,15 @@ const SalesView: React.FC = () => {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">Nueva Venta</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold text-slate-800">Nueva Venta</h1>
+          <button 
+            onClick={() => setIsCashCloseModalOpen(true)}
+            className="px-3 py-1.5 text-xs font-semibold bg-slate-800 text-white hover:bg-slate-700 rounded-md shadow flex items-center gap-1 transition-colors"
+          >
+            📊 Cuadre de Caja
+          </button>
+        </div>
          <div className="w-full max-w-xs">
             <input
                 type="text"
@@ -214,12 +231,19 @@ const SalesView: React.FC = () => {
             }}
             onConfirm={handleConfirmPlate}
             roomNumber={selectedRoom?.number}
+            roomPrice={Number(selectedRoom.price)}
         />
       )}
       {isAdmin && (
         <DailySalesModal 
             isOpen={isDailySalesModalOpen}
             onClose={() => setIsDailySalesModalOpen(false)}
+        />
+      )}
+      {isCashCloseModalOpen && (
+        <CashCloseModal 
+            isOpen={isCashCloseModalOpen}
+            onClose={() => setIsCashCloseModalOpen(false)}
         />
       )}
     </>
