@@ -14,181 +14,236 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, sale }) =>
   const { currentUser, settings } = useAppContext();
 
   const handlePrint = () => {
-    const printContent = invoiceRef.current;
-    if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Factura ${sale.id}</title>
-              <style>
-                /* Styles optimized for 80mm thermal receipt paper */
-                body {
-                  width: 78mm; /* A little less than 80mm for margins */
-                  font-family: 'Courier New', Courier, monospace;
-                  font-size: 10pt;
-                  color: #000;
-                  margin: 0 auto;
-                  padding: 1mm 0;
-                }
-                @page {
-                  size: 80mm;
-                  margin: 0;
-                }
-                .receipt {
-                  padding: 4mm;
-                }
-                .receipt-logo {
-                  font-size: 20pt;
-                  font-weight: bold;
-                  text-align: center;
-                  margin-bottom: 3mm;
-                }
-                .receipt-header {
-                  text-align: center;
-                  font-size: 9pt;
-                  margin-bottom: 4mm;
-                }
-                .receipt-header p {
-                  margin: 1mm 0;
-                }
-                .receipt-info {
-                  font-size: 8pt;
-                  margin-bottom: 2mm;
-                }
-                .receipt-info p {
-                  margin: 0.5mm 0;
-                  display: flex;
-                  justify-content: space-between;
-                }
-                .receipt-hr {
-                  border: 0;
-                  border-top: 1px dashed #000;
-                  margin: 3mm 0;
-                }
-                .receipt-items, .receipt-totals {
-                  width: 100%;
-                  border-collapse: collapse;
-                }
-                .receipt-items th {
-                  font-size: 9pt;
-                  text-align: left;
-                  padding-bottom: 2mm;
-                  border-bottom: 1px dashed #000;
-                }
-                .receipt-items th.price {
-                   text-align: right;
-                }
-                .receipt-items td {
-                  padding: 1.5mm 0;
-                  vertical-align: top;
-                }
-                .receipt-items td .subtext {
-                  font-size: 8pt;
-                  color: #333;
-                  padding-top: 0.5mm;
-                }
-                .receipt-items td.price {
-                  text-align: right;
-                  white-space: nowrap;
-                }
-                .receipt-totals td {
-                  padding: 1.5mm 0;
-                }
-                .receipt-totals .total td {
-                  font-weight: bold;
-                  font-size: 12pt;
-                  padding-top: 2mm;
-                }
-                .receipt-totals .total td.price {
-                    text-align: right;
-                }
-                .receipt-footer {
-                  text-align: center;
-                  margin-top: 5mm;
-                  font-size: 9pt;
-                }
-              </style>
-            </head>
-            <body>
-              ${printContent.innerHTML}
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      }
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      const itemsList = sale.items || [];
+      const saleDate = new Date(sale.date);
+      const dateStr = saleDate.toLocaleDateString('es-DO');
+      const timeStr = saleDate.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' });
+
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Factura ${sale.id}</title>
+            <style>
+              * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+              }
+              body {
+                width: 78mm;
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 9pt;
+                color: #000;
+                margin: 0 auto;
+                padding: 0.5mm 0;
+                line-height: 1.2;
+              }
+              @page {
+                size: 80mm auto;
+                margin: 0;
+              }
+              .receipt {
+                padding: 2mm 1mm;
+              }
+              .receipt-logo {
+                font-size: 13pt;
+                font-weight: bold;
+                text-align: center;
+                text-transform: uppercase;
+                margin-bottom: 1mm;
+              }
+              .receipt-sub {
+                text-align: center;
+                font-size: 8pt;
+                margin-bottom: 1.5mm;
+              }
+              .receipt-hr {
+                border: 0;
+                border-top: 1px dashed #000;
+                margin: 1.5mm 0;
+              }
+              .receipt-info {
+                font-size: 8pt;
+                margin-bottom: 1mm;
+              }
+              .receipt-info div {
+                display: flex;
+                justify-content: space-between;
+              }
+              .receipt-items {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 8.5pt;
+              }
+              .receipt-items th {
+                text-align: left;
+                padding: 1mm 0;
+                font-size: 8.5pt;
+                border-bottom: 1px dashed #000;
+              }
+              .receipt-items th.price {
+                text-align: right;
+              }
+              .receipt-items td {
+                padding: 1mm 0;
+                vertical-align: top;
+              }
+              .receipt-items td.price {
+                text-align: right;
+                white-space: nowrap;
+                font-weight: 600;
+              }
+              .subtext {
+                font-size: 7.5pt;
+                color: #222;
+              }
+              .receipt-total {
+                display: flex;
+                justify-content: space-between;
+                font-size: 11pt;
+                font-weight: bold;
+                padding: 1.5mm 0;
+              }
+              .receipt-footer {
+                text-align: center;
+                font-size: 8pt;
+                margin-top: 2mm;
+                padding-bottom: 1mm;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="receipt">
+              <div class="receipt-logo">${settings.logo_text || 'LevelBlack'}</div>
+              ${settings.rnc ? `<div class="receipt-sub">RNC: ${settings.rnc}</div>` : ''}
+              ${settings.address ? `<div class="receipt-sub">${settings.address}</div>` : ''}
+              
+              <div class="receipt-hr"></div>
+
+              <div class="receipt-info">
+                <div><span>Factura: #${sale.id}</span> <span>${dateStr} ${timeStr}</span></div>
+                <div><span>Cajero: ${currentUser?.name || 'Caja'}</span></div>
+              </div>
+
+              <div class="receipt-hr"></div>
+
+              <table class="receipt-items">
+                <thead>
+                  <tr>
+                    <th>Desc.</th>
+                    <th class="price">Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsList.map(item => `
+                    <tr>
+                      <td>
+                        ${item.name}
+                        ${item.plateNumber ? `<div class="subtext">Placa: ${item.plateNumber}</div>` : ''}
+                      </td>
+                      <td class="price">$${formatCurrency(item.price)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+
+              <div class="receipt-hr"></div>
+
+              <div class="receipt-total">
+                <span>TOTAL:</span>
+                <span>$${formatCurrency(sale.total)}</span>
+              </div>
+
+              <div class="receipt-hr"></div>
+
+              <div class="receipt-footer">
+                <p>¡Gracias por su preferencia!</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      doc.close();
+
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 1000);
+      }, 300);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !sale) return null;
+  const itemsList = sale.items || [];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-start pt-12 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
-        <div ref={invoiceRef}>
-          {/* This inner div is what gets printed. It uses semantic classes for printing. */}
-          {/* Inline styles are added to make the on-screen preview look like a receipt. */}
-          <div className="receipt" style={{ fontFamily: "'Courier New', Courier, monospace", color: 'black' }}>
-              <div className="receipt-logo">{settings.logo_text}</div>
-              <div className="receipt-header">
-                  <p>{settings.address}</p>
-                  <p>RNC: {settings.rnc}</p>
-              </div>
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-start pt-8 p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-xs">
+        <div ref={invoiceRef} className="p-4 bg-white text-black font-mono text-xs border-b">
+          <div className="text-center font-bold text-base uppercase mb-1">{settings.logo_text || 'LevelBlack'}</div>
+          {settings.rnc && <div className="text-center text-[10px] text-gray-600">RNC: {settings.rnc}</div>}
+          {settings.address && <div className="text-center text-[10px] text-gray-600 mb-1">{settings.address}</div>}
 
-              <div className="receipt-info">
-                  <p><span>Factura #:</span> <span>{sale.id}</span></p>
-                  <p><span>Fecha:</span> <span>{new Date(sale.date).toLocaleDateString('es-DO')}</span></p>
-                  <p><span>Hora:</span> <span>{new Date(sale.date).toLocaleTimeString('es-DO')}</span></p>
-                  <p><span>Cajero:</span> <span>{currentUser?.name}</span></p>
-              </div>
+          <div className="border-t border-dashed border-gray-400 my-2"></div>
 
-              <div className="receipt-hr"></div>
-
-              <table className="receipt-items">
-                  <thead>
-                      <tr>
-                          <th>Descripción</th>
-                          <th className="price">Precio</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      {(sale.items || []).map((item, index) => (
-                          <tr key={`${item.id}-${index}`}>
-                              <td>
-                                  {item.name}
-                                  {item.plateNumber && (
-                                      <div className="subtext">Placa: {item.plateNumber}</div>
-                                  )}
-                              </td>
-                              <td className="price">${formatCurrency(item.price)}</td>
-                          </tr>
-                      ))}
-                  </tbody>
-              </table>
-
-              <div className="receipt-hr"></div>
-
-              <table className="receipt-totals">
-                  <tbody>
-                      <tr className="total">
-                          <td>TOTAL</td>
-                          <td className="price">${formatCurrency(sale.total)}</td>
-                      </tr>
-                  </tbody>
-              </table>
-              
-              <div className="receipt-footer">
-                  <p>¡Gracias por su compra!</p>
-              </div>
+          <div className="flex justify-between text-[11px] mb-0.5">
+            <span>Factura: #{sale.id}</span>
+            <span>{new Date(sale.date).toLocaleDateString('es-DO')}</span>
           </div>
+          <div className="flex justify-between text-[11px]">
+            <span>Cajero: {currentUser?.name}</span>
+            <span>{new Date(sale.date).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+
+          <div className="border-t border-dashed border-gray-400 my-2"></div>
+
+          <div className="space-y-1">
+            {itemsList.map((item, index) => (
+              <div key={`${item.id}-${index}`} className="flex justify-between text-[11px]">
+                <div className="pr-2">
+                  <div>{item.name}</div>
+                  {item.plateNumber && <div className="text-[10px] text-gray-500">Placa: {item.plateNumber}</div>}
+                </div>
+                <div className="font-semibold whitespace-nowrap">${formatCurrency(item.price)}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-dashed border-gray-400 my-2"></div>
+
+          <div className="flex justify-between font-bold text-sm">
+            <span>TOTAL:</span>
+            <span>${formatCurrency(sale.total)}</span>
+          </div>
+
+          <div className="border-t border-dashed border-gray-400 my-2"></div>
+          <div className="text-center text-[10px] text-gray-600">¡Gracias por su preferencia!</div>
         </div>
-        <div className="px-6 py-4 bg-slate-50 rounded-b-lg flex justify-end space-x-4">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cerrar</button>
-          <button onClick={handlePrint} className="px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700">Imprimir</button>
+
+        <div className="px-4 py-3 bg-slate-50 rounded-b-lg flex justify-end space-x-2">
+          <button onClick={onClose} className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded text-xs font-medium hover:bg-gray-300">
+            Cerrar
+          </button>
+          <button onClick={handlePrint} className="px-4 py-1.5 bg-sky-600 text-white rounded text-xs font-bold hover:bg-sky-700 shadow-sm">
+            🖨️ Imprimir
+          </button>
         </div>
       </div>
     </div>

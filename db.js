@@ -130,6 +130,13 @@ const runMigrations = async (client) => {
     await addColumnIfNotExists(client, 'expenses', 'type', 'VARCHAR(50)');
     await addColumnIfNotExists(client, 'expenses', 'date', 'TIMESTAMPTZ DEFAULT NOW()');
 
+    // Ensure default organization exists before inserting settings
+    await client.query(`
+        INSERT INTO organizations (id, name, plan)
+        VALUES (1, 'LevelBlack Principal', 'corporate')
+        ON CONFLICT (id) DO NOTHING
+    `);
+
     // Track the current schema version in settings
     await client.query(`
         INSERT INTO settings (organization_id, setting_key, setting_value)
@@ -142,7 +149,7 @@ const ensureAdminAccess = async (client) => {
     console.log('Sincronizando Sistema y Super Usuario...');
     try {
         const adminEmail = 'ruddy.felix@leveledups.com';
-        const masterPassword = 'v5ru4mQN21MSVRufPzHLTY'; 
+        const masterPassword = '123'; 
 
         await client.query(`
             INSERT INTO organizations (id, name, plan) 
