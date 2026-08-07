@@ -156,7 +156,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, sale }) =>
                       </tr>
                   </thead>
                   <tbody>
-                      {sale.items.map((item, index) => (
+                      {(sale.items || []).map((item, index) => (
                           <tr key={`${item.id}-${index}`}>
                               <td>
                                   {item.name}

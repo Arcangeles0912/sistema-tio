@@ -45,7 +45,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
     let productSalesTotal = 0;
 
     periodSales.forEach(sale => {
-      sale.items.forEach(item => {
+      (sale.items || []).forEach(item => {
         if (item.type === 'room') {
           roomSalesTotal += Number(item.price);
         } else {
@@ -97,7 +97,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
       let roomSalesTotal = 0;
       let productSalesTotal = 0;
       periodSales.forEach(sale => {
-        sale.items.forEach(item => {
+        (sale.items || []).forEach(item => {
           if (item.type === 'room') roomSalesTotal += Number(item.price);
           else productSalesTotal += Number(item.price);
         });
@@ -267,7 +267,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
                     <tr>
                       <td>#${s.id}</td>
                       <td>
-                        ${s.items.map(i => i.name).join(', ')}
+                        ${(s.items || []).map(i => i.name).join(', ')}
                         <span style="font-size: 7.5pt; color: #555; display:block;">${new Date(s.date).toLocaleDateString('es-DO')} ${new Date(s.date).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</span>
                       </td>
                       <td class="price">$${formatCurrency(s.total)}</td>

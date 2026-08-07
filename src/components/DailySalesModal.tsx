@@ -63,7 +63,7 @@ const DailySalesModal: React.FC<DailySalesModalProps> = ({ isOpen, onClose }) =>
                 <div className="border-t border-slate-200 px-4 pt-3 pb-4">
                     <h4 className="font-semibold text-sm text-slate-600 mb-2">Artículos:</h4>
                     <ul className="space-y-1 text-sm">
-                        {sale.items.map((item, index) => (
+                        {(sale.items || []).map((item, index) => (
                            <li key={index} className="flex justify-between">
                                <span>
                                    {item.name}

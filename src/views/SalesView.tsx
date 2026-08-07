@@ -64,7 +64,7 @@ const SalesView: React.FC = () => {
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
     const newSale = await addSale(cart);
-    setLastSale(newSale);
+    setLastSale({ ...newSale, items: cart });
     setCart([]);
     setShowInvoice(true);
   };
