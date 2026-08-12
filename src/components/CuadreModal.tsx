@@ -69,45 +69,54 @@ const CuadreModal: React.FC<CuadreModalProps> = ({ isOpen, onClose }) => {
             <style>
               body {
                 width: 78mm;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 10pt;
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+                font-size: 10.5pt;
                 color: #000;
                 margin: 0 auto;
                 padding: 1mm 0;
+                line-height: 1.3;
               }
               @page {
                 size: 80mm auto;
                 margin: 0;
               }
               .receipt {
-                padding: 4mm;
+                padding: 3mm 1mm;
               }
               .receipt-logo {
-                font-size: 18pt;
+                font-size: 16pt;
                 font-weight: bold;
                 text-align: center;
-                margin-bottom: 2mm;
+                margin-bottom: 1.5mm;
+                text-transform: uppercase;
               }
               .receipt-header {
                 text-align: center;
-                font-size: 9pt;
-                margin-bottom: 3mm;
+                font-size: 9.5pt;
+                margin-bottom: 3.5mm;
               }
+              .receipt-header p { margin: 0.5mm 0; }
               .receipt-hr {
                 border: 0;
-                border-top: 1px dashed #000;
-                margin: 3mm 0;
+                border-top: 1.5px dashed #000;
+                margin: 2.5mm 0;
               }
               .receipt-row {
                 display: flex;
                 justify-content: space-between;
-                font-size: 9pt;
+                font-size: 10pt;
                 margin: 1.5mm 0;
+              }
+              .receipt-row span:last-child {
+                font-weight: bold;
               }
               .receipt-total {
                 font-size: 12pt;
                 font-weight: bold;
                 margin-top: 3mm;
+                border-top: 1px solid #000;
+                border-bottom: 1px solid #000;
+                padding: 1.5mm 0;
               }
             </style>
           </head>
@@ -115,7 +124,9 @@ const CuadreModal: React.FC<CuadreModalProps> = ({ isOpen, onClose }) => {
             <div class="receipt">
               <div class="receipt-logo">${settings.logo_text || 'LevelBlack'}</div>
               <div class="receipt-header">
-                <p>COMPROBANTE DE CUADRE DE CAJA</p>
+                ${settings.address ? `<p>${settings.address}</p>` : ''}
+                ${settings.rnc ? `<p>RNC: ${settings.rnc}</p>` : ''}
+                <p style="font-weight: bold; margin-top: 2mm;">COMPROBANTE DE CUADRE DE CAJA</p>
                 <p>${closedText}</p>
               </div>
               <div class="receipt-hr"></div>
@@ -128,7 +139,7 @@ const CuadreModal: React.FC<CuadreModalProps> = ({ isOpen, onClose }) => {
               <div class="receipt-hr"></div>
               <div class="receipt-row receipt-total"><span>EFECTIVO A ENTREGAR:</span> <span>$${formatCurrency(cuadreData.cashInBox)}</span></div>
               <div class="receipt-hr"></div>
-              <div style="text-align: center; margin-top: 5mm; font-size: 8pt;">
+              <div style="text-align: center; margin-top: 6mm; font-size: 9pt;">
                 <p>FIRMA DEL ADMINISTRADOR</p>
                 <br/><br/>
                 <p>___________________________</p>

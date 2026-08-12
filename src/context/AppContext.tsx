@@ -131,7 +131,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ...s,
             total: Number(s.total),
             date: new Date(s.date),
-            items: s.items?.map((item: SaleItem) => ({ ...item, price: Number(item.price) })) || []
+            items: s.items?.map((item: any) => ({
+                ...item,
+                id: item.item_id || item.id,
+                type: item.item_type || item.type,
+                price: Number(item.price)
+            })) || []
         })));
         setSettings(results[4]);
         setExpenses(results[5].map((e: Expense) => ({ ...e, amount: Number(e.amount), date: new Date(e.date) })));
@@ -324,7 +329,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         ...s,
                         total: Number(s.total),
                         date: new Date(s.date),
-                        items: s.items?.map((item: SaleItem) => ({ ...item, price: Number(item.price) })) || []
+                        items: s.items?.map((item: any) => ({
+                            ...item,
+                            id: item.item_id || item.id,
+                            type: item.item_type || item.type,
+                            price: Number(item.price)
+                        })) || []
                     })))).catch(e => console.error("WS failed to fetch sales:", e));
                 }
                 if (resources.includes('products')) {

@@ -36,7 +36,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, sale }) =>
         <html>
           <head>
             <title>Factura ${sale.id}</title>
-            <style>
+             <style>
               * {
                 box-sizing: border-box;
                 margin: 0;
@@ -44,12 +44,12 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, sale }) =>
               }
               body {
                 width: 78mm;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 9pt;
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+                font-size: 10.5pt;
                 color: #000;
                 margin: 0 auto;
                 padding: 0.5mm 0;
-                line-height: 1.2;
+                line-height: 1.3;
               }
               @page {
                 size: 80mm auto;
@@ -59,69 +59,76 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, sale }) =>
                 padding: 2mm 1mm;
               }
               .receipt-logo {
-                font-size: 13pt;
+                font-size: 15pt;
                 font-weight: bold;
                 text-align: center;
                 text-transform: uppercase;
-                margin-bottom: 1mm;
+                margin-bottom: 1.5mm;
               }
               .receipt-sub {
                 text-align: center;
-                font-size: 8pt;
+                font-size: 9pt;
                 margin-bottom: 1.5mm;
+                font-weight: 550;
               }
               .receipt-hr {
                 border: 0;
-                border-top: 1px dashed #000;
-                margin: 1.5mm 0;
+                border-top: 1.5px dashed #000;
+                margin: 2mm 0;
               }
               .receipt-info {
-                font-size: 8pt;
-                margin-bottom: 1mm;
+                font-size: 9.5pt;
+                margin-bottom: 1.5mm;
               }
               .receipt-info div {
                 display: flex;
                 justify-content: space-between;
+                margin: 0.5mm 0;
               }
               .receipt-items {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 8.5pt;
+                font-size: 10pt;
               }
               .receipt-items th {
                 text-align: left;
-                padding: 1mm 0;
-                font-size: 8.5pt;
-                border-bottom: 1px dashed #000;
+                padding: 1.2mm 0;
+                font-size: 10pt;
+                border-bottom: 1.5px dashed #000;
               }
               .receipt-items th.price {
                 text-align: right;
               }
               .receipt-items td {
-                padding: 1mm 0;
+                padding: 1.2mm 0;
                 vertical-align: top;
               }
               .receipt-items td.price {
                 text-align: right;
                 white-space: nowrap;
-                font-weight: 600;
+                font-weight: bold;
               }
               .subtext {
-                font-size: 7.5pt;
-                color: #222;
+                font-size: 8.5pt;
+                color: #000;
+                font-weight: bold;
+                margin-top: 0.5mm;
               }
               .receipt-total {
                 display: flex;
                 justify-content: space-between;
-                font-size: 11pt;
+                font-size: 13pt;
                 font-weight: bold;
-                padding: 1.5mm 0;
+                padding: 2mm 0;
+                border-top: 1.5px solid #000;
+                border-bottom: 1.5px solid #000;
               }
               .receipt-footer {
                 text-align: center;
-                font-size: 8pt;
-                margin-top: 2mm;
+                font-size: 9.5pt;
+                margin-top: 3mm;
                 padding-bottom: 1mm;
+                line-height: 1.4;
               }
             </style>
           </head>

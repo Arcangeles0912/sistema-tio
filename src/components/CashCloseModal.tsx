@@ -132,92 +132,86 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
             <style>
               body {
                 width: 78mm;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 9pt;
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+                font-size: 10.5pt;
                 color: #000;
                 margin: 0 auto;
                 padding: 1mm 0;
+                line-height: 1.3;
               }
               @page {
                 size: 80mm;
                 margin: 0;
               }
               .receipt {
-                padding: 3mm;
+                padding: 3mm 1mm;
               }
               .receipt-logo {
                 font-size: 16pt;
                 font-weight: bold;
                 text-align: center;
-                margin-bottom: 2mm;
+                margin-bottom: 1.5mm;
+                text-transform: uppercase;
               }
               .receipt-header {
                 text-align: center;
-                font-size: 8pt;
-                margin-bottom: 3mm;
+                font-size: 9.5pt;
+                margin-bottom: 3.5mm;
               }
               .receipt-header p { margin: 0.5mm 0; }
               .receipt-title {
                 text-align: center;
-                font-size: 11pt;
+                font-size: 12pt;
                 font-weight: bold;
-                margin: 2mm 0;
-                border-top: 1px solid #000;
-                border-bottom: 1px solid #000;
-                padding: 1mm 0;
+                margin: 2.5mm 0;
+                border-top: 1.5px solid #000;
+                border-bottom: 1.5px solid #000;
+                padding: 1.5mm 0;
               }
               .receipt-info {
-                font-size: 8pt;
-                margin-bottom: 2mm;
+                font-size: 9.5pt;
+                margin-bottom: 3mm;
               }
               .receipt-info p {
-                margin: 0.5mm 0;
+                margin: 0.8mm 0;
                 display: flex;
                 justify-content: space-between;
               }
               .receipt-hr {
                 border: 0;
-                border-top: 1px dashed #000;
-                margin: 2mm 0;
+                border-top: 1.5px dashed #000;
+                margin: 2.5mm 0;
               }
-              .receipt-summary-table, .receipt-detail-table {
+              .receipt-summary-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 8.5pt;
+                font-size: 10pt;
               }
               .receipt-summary-table td {
-                padding: 1mm 0;
+                padding: 1.2mm 0;
               }
               .receipt-summary-table .bold-row {
                 font-weight: bold;
-                font-size: 10pt;
+                font-size: 11.5pt;
               }
-              .receipt-summary-table .price, .receipt-detail-table .price {
+              .receipt-summary-table .price {
                 text-align: right;
-              }
-              .receipt-detail-table th {
-                text-align: left;
-                font-size: 8pt;
-                border-bottom: 1px dashed #000;
-                padding-bottom: 1mm;
-              }
-              .receipt-detail-table td {
-                padding: 1mm 0;
-                font-size: 8pt;
+                font-weight: bold;
               }
               .receipt-footer {
                 text-align: center;
-                margin-top: 4mm;
-                font-size: 8pt;
+                margin-top: 5mm;
+                font-size: 9pt;
+                line-height: 1.4;
               }
             </style>
           </head>
           <body>
             <div class="receipt">
-              <div class="receipt-logo">${settings.logo_text}</div>
+              <div class="receipt-logo">${settings.logo_text || 'LevelBlack'}</div>
               <div class="receipt-header">
-                <p>${settings.address}</p>
-                <p>RNC: ${settings.rnc}</p>
+                ${settings.address ? `<p>${settings.address}</p>` : ''}
+                ${settings.rnc ? `<p>RNC: ${settings.rnc}</p>` : ''}
               </div>
               <div class="receipt-title">CUADRE DE CAJA</div>
               
@@ -225,7 +219,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
                 <p><span>F. Inicio:</span> <span>${parseLocalDate(startStr).toLocaleDateString('es-DO')}</span></p>
                 <p><span>F. Fin:</span> <span>${parseLocalDate(endStr).toLocaleDateString('es-DO')}</span></p>
                 <p><span>Impreso:</span> <span>${new Date().toLocaleDateString('es-DO')} ${new Date().toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</span></p>
-                <p><span>Usuario:</span> <span>${currentUser?.name}</span></p>
+                <p><span>Usuario:</span> <span>${currentUser?.name || ''}</span></p>
               </div>
               
               <div class="receipt-hr"></div>
@@ -240,16 +234,16 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
                     <td>Ventas Productos:</td>
                     <td class="price">$${formatCurrency(reportData.productSalesTotal)}</td>
                   </tr>
-                  <tr style="border-top: 1px dashed #ccc;">
+                  <tr style="border-top: 1px dashed #000;">
                     <td style="font-weight: bold;">Ventas Totales:</td>
                     <td class="price" style="font-weight: bold;">$${formatCurrency(reportData.salesTotal)}</td>
                   </tr>
-                  <tr style="color: #444;">
+                  <tr style="color: #000;">
                     <td>(-) Egresos / Gastos:</td>
                     <td class="price">-$${formatCurrency(reportData.expensesTotal)}</td>
                   </tr>
                   <tr class="receipt-hr"></tr>
-                  <tr class="bold-row" style="border-top: 1px solid #000; border-bottom: 1px solid #000;">
+                  <tr class="bold-row" style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;">
                     <td>BALANCE NETO EN CAJA:</td>
                     <td class="price">$${formatCurrency(reportData.netBalance)}</td>
                   </tr>
@@ -258,58 +252,9 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
               
               <div class="receipt-hr"></div>
               
-              <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 1mm;">DETALLE DE VENTAS (${reportData.sales.length})</div>
-              <table class="receipt-detail-table">
-                <thead>
-                  <tr>
-                    <th>Ref/Fact</th>
-                    <th>Detalle</th>
-                    <th class="price">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${reportData.sales.map(s => `
-                    <tr>
-                      <td>#${s.id}</td>
-                      <td>
-                        ${(s.items || []).map(i => i.name).join(', ')}
-                        <span style="font-size: 7.5pt; color: #555; display:block;">${new Date(s.date).toLocaleDateString('es-DO')} ${new Date(s.date).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</span>
-                      </td>
-                      <td class="price">$${formatCurrency(s.total)}</td>
-                    </tr>
-                  `).join('')}
-                  ${reportData.sales.length === 0 ? '<tr><td colspan="3" style="text-align:center;color:#666;">No hay ventas</td></tr>' : ''}
-                </tbody>
-              </table>
-              
-              <div class="receipt-hr"></div>
-              
-              <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 1mm;">DETALLE DE EGRESOS/GASTOS (${reportData.expenses.length})</div>
-              <table class="receipt-detail-table">
-                <thead>
-                  <tr>
-                    <th>Gasto</th>
-                    <th>Tipo</th>
-                    <th class="price">Monto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${reportData.expenses.map(e => `
-                    <tr>
-                      <td>${e.description}</td>
-                      <td>${e.type}</td>
-                      <td class="price">-$${formatCurrency(e.amount)}</td>
-                    </tr>
-                  `).join('')}
-                  ${reportData.expenses.length === 0 ? '<tr><td colspan="3" style="text-align:center;color:#666;">No hay gastos</td></tr>' : ''}
-                </tbody>
-              </table>
-              
-              <div class="receipt-hr"></div>
-              
               <div class="receipt-footer">
                 <p>Cierre de Turno de Caja</p>
-                <p>LevelBlack Hotel Management</p>
+                <p>${settings.logo_text || 'LevelBlack'} Hotel Management</p>
               </div>
             </div>
           </body>

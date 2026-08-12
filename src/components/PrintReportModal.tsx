@@ -73,14 +73,57 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({ isOpen, onClose }) 
           <head>
             <title>REPORTE DE VENTAS</title>
             <style>
-              body { width: 78mm; font-family: 'Courier New', Courier, monospace; font-size: 10pt; color: #000; margin: 0 auto; padding: 1mm 0; }
-              @page { size: 80mm auto; margin: 0; }
-              .receipt { padding: 4mm; }
-              .receipt-logo { font-size: 18pt; font-weight: bold; text-align: center; margin-bottom: 2mm; }
-              .receipt-header { text-align: center; font-size: 9pt; margin-bottom: 3mm; }
-              .receipt-hr { border: 0; border-top: 1px dashed #000; margin: 3mm 0; }
-              .receipt-row { display: flex; justify-content: space-between; font-size: 9pt; margin: 1.5mm 0; }
-              .receipt-total { font-size: 12pt; font-weight: bold; margin-top: 3mm; }
+              body {
+                width: 78mm;
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+                font-size: 10.5pt;
+                color: #000;
+                margin: 0 auto;
+                padding: 1mm 0;
+                line-height: 1.3;
+              }
+              @page {
+                size: 80mm auto;
+                margin: 0;
+              }
+              .receipt {
+                padding: 3mm 1mm;
+              }
+              .receipt-logo {
+                font-size: 16pt;
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 1.5mm;
+                text-transform: uppercase;
+              }
+              .receipt-header {
+                text-align: center;
+                font-size: 9.5pt;
+                margin-bottom: 3.5mm;
+              }
+              .receipt-header p { margin: 0.5mm 0; }
+              .receipt-hr {
+                border: 0;
+                border-top: 1.5px dashed #000;
+                margin: 2.5mm 0;
+              }
+              .receipt-row {
+                display: flex;
+                justify-content: space-between;
+                font-size: 10pt;
+                margin: 1.5mm 0;
+              }
+              .receipt-row span:last-child {
+                font-weight: bold;
+              }
+              .receipt-total {
+                font-size: 12pt;
+                font-weight: bold;
+                margin-top: 3mm;
+                border-top: 1px solid #000;
+                border-bottom: 1px solid #000;
+                padding: 1.5mm 0;
+              }
             </style>
           </head>
           <body>
