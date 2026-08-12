@@ -1,0 +1,6 @@
+{
+  "appId": "com.levelblack.app",
+  "appName": "LevelBlack V2",
+  "webDir": "build",
+  "bundledWebRuntime": false
+}

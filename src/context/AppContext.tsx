@@ -1,9 +1,15 @@
 
 import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
 import type { Product, Room, Sale, SaleItem, User, Settings, Expense, RoomLog, RoomClearingStatus, ShiftException, AuditLog, SuperAdminOrganization, Plan, PlanUpgradeRequest, SuperAdminPlanUpgradeRequest } from '../types';
+import { localDatabase } from '../utils/localDatabase';
 
 // Helper for API calls
 const apiFetch = async (url: string, options: RequestInit = {}) => {
+  const useRemote = localStorage.getItem('levelblack_use_remote') === 'true';
+  if (!useRemote) {
+    return localDatabase.handleRequest(url, options);
+  }
+
   const isFormData = options.body instanceof FormData;
   const headersInit = { ...options.headers };
 
@@ -297,6 +303,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     
     if (sessionCheckInterval.current) clearInterval(sessionCheckInterval.current);
+    
+    const useRemote = localStorage.getItem('levelblack_use_remote') === 'true';
+    if (!useRemote) {
+      return; // Skip WebSocket connection in local/offline mode
+    }
+
     sessionCheckInterval.current = window.setInterval(checkSession, 30000);
 
     // --- WebSocket Connection ---
