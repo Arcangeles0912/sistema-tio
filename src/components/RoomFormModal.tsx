@@ -25,19 +25,23 @@ const RoomFormModal: React.FC<RoomFormModalProps> = ({ isOpen, onClose, roomToEd
     }
   }, [roomToEdit, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const roomData = {
       number,
       price: parseFloat(price) || 0,
     };
 
-    if (roomToEdit) {
-      updateRoom({ ...roomData, id: roomToEdit.id });
-    } else {
-      addRoom(roomData);
+    try {
+      if (roomToEdit) {
+        await updateRoom({ ...roomData, id: roomToEdit.id });
+      } else {
+        await addRoom(roomData);
+      }
+      onClose();
+    } catch (err: any) {
+      alert('Error al guardar la habitación: ' + err.message);
     }
-    onClose();
   };
 
   if (!isOpen) {

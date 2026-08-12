@@ -406,11 +406,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         method: 'POST',
         body: JSON.stringify({ clearingStatus, userId: currentUser?.id }),
       });
-      // Data will be refreshed via WebSocket
+      await fetchAllData(currentUser);
     } catch (error: any) {
       alert(`Hubo un error al actualizar el estado de la habitación: ${error.message}`);
     }
-  }, [currentUser]);
+  }, [fetchAllData, currentUser]);
 
   const addUser = useCallback(async (userData: Omit<User, 'id'| 'active_session_id' | 'organization' | 'is_active' | 'is_confirmed' | 'has_completed_onboarding'>) => {
     try {

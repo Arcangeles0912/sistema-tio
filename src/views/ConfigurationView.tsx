@@ -11,6 +11,7 @@ const ConfigurationView: React.FC = () => {
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean, message: string } | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   // File states for Super Admin
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -20,6 +21,7 @@ const ConfigurationView: React.FC = () => {
   
   const logoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isSuperAdmin = currentUser?.email === 'ruddy.felix@leveledups.com' || currentUser?.isSuperAdmin;
 
@@ -92,6 +94,124 @@ const ConfigurationView: React.FC = () => {
       } finally {
           setIsTestingEmail(false);
       }
+  };
+
+  const getBackupString = (): string => {
+    const backupData: Record<string, string> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('levelblack_db_')) {
+        const val = localStorage.getItem(key);
+        if (val) backupData[key] = val;
+      }
+    }
+    return JSON.stringify(backupData, null, 2);
+  };
+
+  const handleExportBackup = async () => {
+    try {
+      const backupStr = getBackupString();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `levelblack_backup_${dateStr}.json`;
+
+      // 1. Intentar compartir en móviles
+      if (navigator.share) {
+        try {
+          const file = new File([backupStr], fileName, { type: 'application/json' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'Respaldo LevelBlack',
+              text: 'Archivo de copia de seguridad local de LevelBlack.'
+            });
+            return;
+          }
+        } catch (shareErr) {
+          console.log('Compartir falló, usando descarga estándar:', shareErr);
+        }
+      }
+
+      // 2. Descarga estándar en navegadores normales
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(backupStr)}`;
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', jsonString);
+      downloadAnchor.setAttribute('download', fileName);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (error) {
+      alert('Error al exportar la copia de seguridad.');
+    }
+  };
+
+  const handleCopyToClipboard = async () => {
+    try {
+      const backupStr = getBackupString();
+      await navigator.clipboard.writeText(backupStr);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 3000);
+      alert('Copia de seguridad copiada al portapapeles en formato de texto.');
+    } catch (error) {
+      alert('Error al copiar al portapapeles.');
+    }
+  };
+
+  const restoreDatabase = (json: any) => {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('levelblack_db_')) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    Object.entries(json).forEach(([key, val]) => {
+      if (key.startsWith('levelblack_db_') && typeof val === 'string') {
+        localStorage.setItem(key, val);
+      }
+    });
+
+    alert('Respaldo restaurado con éxito. La aplicación se reiniciará para aplicar los cambios.');
+    window.location.reload();
+  };
+
+  const validateAndRestore = (jsonText: string) => {
+    try {
+      const json = JSON.parse(jsonText);
+      if (!json || typeof json !== 'object') {
+        throw new Error('Formato no válido.');
+      }
+
+      const keys = Object.keys(json);
+      const hasDbKeys = keys.some(k => k.startsWith('levelblack_db_'));
+      if (!hasDbKeys) {
+        alert('El texto no contiene un respaldo válido de LevelBlack.');
+        return;
+      }
+
+      if (window.confirm('¿Estás seguro de restaurar este respaldo? Se sobrescribirán todos los datos actuales de este teléfono y la aplicación se reiniciará.')) {
+        restoreDatabase(json);
+      }
+    } catch (error) {
+      alert('Error: Los datos no corresponden a un formato JSON de respaldo válido.');
+    }
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      validateAndRestore(event.target?.result as string);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleRestoreFromClipboard = () => {
+    const pastedText = prompt('Pega aquí el texto completo del respaldo que copiaste al portapapeles:');
+    if (pastedText) {
+      validateAndRestore(pastedText.trim());
+    }
   };
 
   return (
@@ -236,6 +356,58 @@ const ConfigurationView: React.FC = () => {
             )}
         </div>
       )}
+
+      {/* Sección de Respaldo de Datos */}
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+          <h3 className="text-lg font-bold text-slate-800 mb-2 flex items-center">
+              <span className="mr-2">💾</span> Copia de Seguridad y Restauración
+          </h3>
+          <p className="text-sm text-slate-600 mb-6">
+              Exporta los datos de la aplicación (productos, habitaciones, ventas, gastos, configuración, etc.) para guardarlos o importarlos en otro dispositivo. **Ideal para transferir datos entre teléfonos.**
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Export Box */}
+              <div className="p-4 border border-slate-100 rounded-lg bg-slate-50/50 flex flex-col justify-between">
+                  <div>
+                      <h4 className="font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                          📥 Respaldar Datos
+                      </h4>
+                      <p className="text-xs text-slate-500 mb-4">
+                          Comparte el archivo de respaldo o copia los datos como texto.
+                      </p>
+                  </div>
+                  <div className="space-y-2">
+                      <button type="button" onClick={handleExportBackup} className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-lg transition-all transform active:scale-[0.98] shadow-sm flex items-center justify-center gap-2">
+                          <span>📤</span> Compartir / Descargar Respaldo
+                      </button>
+                      <button type="button" onClick={handleCopyToClipboard} className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium rounded-lg transition-all transform active:scale-[0.98] shadow-sm flex items-center justify-center gap-2">
+                          <span>📋</span> {isCopied ? '¡Copiado!' : 'Copiar como Texto (Portapapeles)'}
+                      </button>
+                  </div>
+              </div>
+
+              {/* Import Box */}
+              <div className="p-4 border border-slate-100 rounded-lg bg-slate-50/50 flex flex-col justify-between">
+                  <div>
+                      <h4 className="font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                          📤 Restaurar Datos
+                      </h4>
+                      <p className="text-xs text-slate-500 mb-4">
+                          Sube un archivo de respaldo o pega el texto desde el portapapeles.
+                      </p>
+                  </div>
+                  <div className="space-y-2">
+                      <input type="file" ref={fileInputRef} onChange={handleImportBackup} accept=".json" className="hidden" />
+                      <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all transform active:scale-[0.98] shadow-sm flex items-center justify-center gap-2">
+                          <span>📂</span> Cargar Archivo de Respaldo
+                      </button>
+                      <button type="button" onClick={handleRestoreFromClipboard} className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium rounded-lg transition-all transform active:scale-[0.98] shadow-sm flex items-center justify-center gap-2">
+                          <span>📋</span> Pegar Texto (Portapapeles)
+                      </button>
+                  </div>
+              </div>
+          </div>
+      </div>
     </div>
   );
 };

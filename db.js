@@ -130,6 +130,9 @@ const runMigrations = async (client) => {
     await addColumnIfNotExists(client, 'expenses', 'type', 'VARCHAR(50)');
     await addColumnIfNotExists(client, 'expenses', 'date', 'TIMESTAMPTZ DEFAULT NOW()');
 
+    // rooms columns
+    await addColumnIfNotExists(client, 'rooms', 'status', "room_status DEFAULT 'disponible'");
+
     // Ensure default organization exists before inserting settings
     await client.query(`
         INSERT INTO organizations (id, name, plan)

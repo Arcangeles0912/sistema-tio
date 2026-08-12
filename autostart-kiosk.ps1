@@ -1,7 +1,7 @@
 # Script de arranque automatico robusto de LevelBlack CRM para Windows
 
 $ProgressPreference = 'SilentlyContinue'
-Set-Location "C:\Users\Leveledups\Desktop\levelBlack\levelBlack"
+Set-Location $PSScriptRoot
 
 # 1. Asegurar que Docker Desktop este ejecutandose
 $dockerProcess = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue

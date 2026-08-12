@@ -28,7 +28,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
     }
   }, [productToEdit, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const productData = {
       name,
@@ -36,12 +36,16 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
       stock: parseInt(stock, 10) || 0,
     };
 
-    if (productToEdit) {
-      updateProduct({ ...productData, id: productToEdit.id });
-    } else {
-      addProduct(productData);
+    try {
+      if (productToEdit) {
+        await updateProduct({ ...productData, id: productToEdit.id });
+      } else {
+        await addProduct(productData);
+      }
+      onClose();
+    } catch (err: any) {
+      alert('Error al guardar el producto/servicio: ' + err.message);
     }
-    onClose();
   };
 
   if (!isOpen) {
