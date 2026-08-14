@@ -130,69 +130,90 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
           <head>
             <title>Cuadre de Caja - ${new Date().toLocaleDateString('es-DO')}</title>
             <style>
-              body {
-                width: 78mm;
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                background-color: #fff;
                 font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-                font-size: 10.5pt;
+                font-size: 8.5pt;
                 color: #000;
-                margin: 0 auto;
-                padding: 1mm 0;
-                line-height: 1.3;
+                line-height: 1.2;
+                overflow: visible !important;
+              }
+              body {
+                display: block;
               }
               @page {
-                size: 80mm;
-                margin: 0;
+                size: 80mm auto;
+                margin: 0 !important;
               }
               .receipt {
-                padding: 3mm 1mm;
+                width: 100%;
+                max-width: 76mm;
+                margin: 0 auto;
+                padding: 1mm 1.5mm;
+                box-sizing: border-box;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
               }
               .receipt-logo {
-                font-size: 16pt;
+                font-size: 12pt;
                 font-weight: bold;
                 text-align: center;
-                margin-bottom: 1.5mm;
+                margin-bottom: 0.3mm;
                 text-transform: uppercase;
               }
               .receipt-header {
                 text-align: center;
-                font-size: 9.5pt;
-                margin-bottom: 3.5mm;
+                font-size: 8pt;
+                margin-bottom: 1.5mm;
               }
-              .receipt-header p { margin: 0.5mm 0; }
+              .receipt-header p { margin: 0.1mm 0; }
               .receipt-title {
                 text-align: center;
-                font-size: 12pt;
+                font-size: 10pt;
                 font-weight: bold;
-                margin: 2.5mm 0;
-                border-top: 1.5px solid #000;
-                border-bottom: 1.5px solid #000;
-                padding: 1.5mm 0;
+                margin: 1mm 0;
+                border-top: 1px solid #000;
+                border-bottom: 1px solid #000;
+                padding: 0.8mm 0;
               }
               .receipt-info {
-                font-size: 9.5pt;
-                margin-bottom: 3mm;
+                font-size: 8pt;
+                margin-bottom: 1.5mm;
               }
               .receipt-info p {
-                margin: 0.8mm 0;
-                display: flex;
-                justify-content: space-between;
+                margin: 0.3mm 0;
+                clear: both;
+                overflow: hidden;
+              }
+              .receipt-info p span:first-child {
+                float: left;
+              }
+              .receipt-info p span:last-child {
+                float: right;
+                font-weight: bold;
               }
               .receipt-hr {
                 border: 0;
-                border-top: 1.5px dashed #000;
-                margin: 2.5mm 0;
+                border-top: 1px dashed #000;
+                margin: 1mm 0;
+                clear: both;
               }
               .receipt-summary-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 10pt;
+                font-size: 8.5pt;
+                clear: both;
               }
               .receipt-summary-table td {
-                padding: 1.2mm 0;
+                padding: 0.6mm 0;
               }
               .receipt-summary-table .bold-row {
                 font-weight: bold;
-                font-size: 11.5pt;
+                font-size: 9.5pt;
               }
               .receipt-summary-table .price {
                 text-align: right;
@@ -200,9 +221,10 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
               }
               .receipt-footer {
                 text-align: center;
-                margin-top: 5mm;
-                font-size: 9pt;
-                line-height: 1.4;
+                margin-top: 2.5mm;
+                font-size: 7.5pt;
+                line-height: 1.25;
+                clear: both;
               }
             </style>
           </head>
@@ -238,12 +260,11 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
                     <td style="font-weight: bold;">Ventas Totales:</td>
                     <td class="price" style="font-weight: bold;">$${formatCurrency(reportData.salesTotal)}</td>
                   </tr>
-                  <tr style="color: #000;">
+                  <tr>
                     <td>(-) Egresos / Gastos:</td>
                     <td class="price">-$${formatCurrency(reportData.expensesTotal)}</td>
                   </tr>
-                  <tr class="receipt-hr"></tr>
-                  <tr class="bold-row" style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;">
+                  <tr style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;" class="bold-row">
                     <td>BALANCE NETO EN CAJA:</td>
                     <td class="price">$${formatCurrency(reportData.netBalance)}</td>
                   </tr>
