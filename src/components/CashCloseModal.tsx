@@ -409,14 +409,6 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
           </button>
           
           <div className="flex space-x-3">
-            {/* Day Close Report */}
-            <button
-              onClick={() => handlePrint(true)}
-              className="px-4 py-2 text-xs font-bold bg-amber-600 text-white hover:bg-amber-700 rounded-md shadow-sm transition-all duration-200"
-            >
-              🖨️ Imprimir Ventas del Día
-            </button>
-            
             {/* Period Close Report */}
             <button
               onClick={() => handlePrint(false)}
