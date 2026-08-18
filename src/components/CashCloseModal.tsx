@@ -8,7 +8,7 @@ interface CashCloseModalProps {
 }
 
 const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
-  const { sales, expenses, currentUser, settings } = useAppContext();
+  const { sales, expenses, currentUser, settings, products } = useAppContext();
 
   // Default dates to today's date in local YYYY-MM-DD
   const getTodayString = () => {
@@ -19,21 +19,47 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
     return `${year}-${month}-${day}`;
   };
 
-  const [startDate, setStartDate] = useState(getTodayString());
-  const [endDate, setEndDate] = useState(getTodayString());
+  const [startDateTime, setStartDateTime] = useState(`${getTodayString()}T00:00`);
+  const [endDateTime, setEndDateTime] = useState(`${getTodayString()}T23:59`);
 
-  const parseLocalDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
+  const parseLocalDateTime = (dateTimeStr: string) => {
+    if (!dateTimeStr) return new Date();
+    const [datePart, timePart] = dateTimeStr.split('T');
+    if (!datePart || !timePart) return new Date();
+    const [year, month, day] = datePart.split('-').map(Number);
+    const timeParts = timePart.split(':').map(Number);
+    const hours = timeParts[0] || 0;
+    const minutes = timeParts[1] || 0;
+    const seconds = timeParts[2] || 0;
+    return new Date(year, month - 1, day, hours, minutes, seconds, 0);
   };
 
-  // Filter sales and expenses by period (inclusive of whole days)
-  const filteredData = useMemo(() => {
-    const start = parseLocalDate(startDate);
-    start.setHours(0, 0, 0, 0);
+  const formatDateTimeDMY = (dateObj: Date | string) => {
+    const d = new Date(dateObj);
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
 
-    const end = parseLocalDate(endDate);
-    end.setHours(23, 59, 59, 999);
+  const formatDateDMY = (dateObj: Date | string) => {
+    const d = new Date(dateObj);
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Filter sales and expenses by period (inclusive of minutes)
+  const filteredData = useMemo(() => {
+    const start = parseLocalDateTime(startDateTime);
+    const end = parseLocalDateTime(endDateTime);
+    // Cover the full last minute (up to 59s, 999ms)
+    end.setSeconds(59, 999);
 
     const periodSales = sales.filter(sale => {
       const saleDate = new Date(sale.date);
@@ -72,22 +98,21 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
       expensesTotal,
       netBalance
     };
-  }, [sales, expenses, startDate, endDate]);
+  }, [sales, expenses, startDateTime, endDateTime]);
 
   const handlePrint = (isTodayOnly: boolean = false) => {
     let reportData = filteredData;
-    let startStr = startDate;
-    let endStr = endDate;
+    let startStr = startDateTime;
+    let endStr = endDateTime;
 
     if (isTodayOnly) {
       const todayStr = getTodayString();
-      startStr = todayStr;
-      endStr = todayStr;
+      startStr = `${todayStr}T00:00`;
+      endStr = `${todayStr}T23:59`;
 
-      const start = parseLocalDate(todayStr);
-      start.setHours(0, 0, 0, 0);
-      const end = parseLocalDate(todayStr);
-      end.setHours(23, 59, 59, 999);
+      const start = parseLocalDateTime(startStr);
+      const end = parseLocalDateTime(endStr);
+      end.setSeconds(59, 999);
 
       const periodSales = sales.filter(sale => {
         const saleDate = new Date(sale.date);
@@ -123,12 +148,65 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
       };
     }
 
+    // Calculate product breakdown for printing
+    const productSummaryMap: Record<number, { name: string; soldQty: number; currentStock: number }> = {};
+    (products || []).forEach(p => {
+      productSummaryMap[p.id] = {
+        name: p.name,
+        soldQty: 0,
+        currentStock: Number(p.stock)
+      };
+    });
+
+    (reportData.sales || []).forEach(sale => {
+      (sale.items || []).forEach(item => {
+        if (item.type === 'product') {
+          if (productSummaryMap[item.id]) {
+            productSummaryMap[item.id].soldQty += 1;
+          } else {
+            productSummaryMap[item.id] = {
+              name: item.name,
+              soldQty: 1,
+              currentStock: 0
+            };
+          }
+        }
+      });
+    });
+
+    const printedProductDetails = Object.values(productSummaryMap).filter(p => p.soldQty > 0);
+
+    const productDetailsHtml = printedProductDetails.length > 0 
+      ? `
+        <div class="receipt-hr"></div>
+        <div style="font-weight: bold; text-align: center; margin-bottom: 1.5mm; font-size: 8.5pt; text-transform: uppercase;">Detalle de Productos</div>
+        <table class="receipt-summary-table" style="font-size: 8pt;">
+          <thead>
+            <tr style="border-bottom: 1px dashed #000; font-weight: bold;">
+              <td>Producto</td>
+              <td style="text-align: center; width: 15mm;">Cant.</td>
+              <td style="text-align: right; width: 15mm;">Stock</td>
+            </tr>
+          </thead>
+          <tbody>
+            ${printedProductDetails.map(p => `
+              <tr>
+                <td>${p.name}</td>
+                <td style="text-align: center;">${p.soldQty}</td>
+                <td style="text-align: right;">${p.currentStock}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` 
+      : '';
+
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Cuadre de Caja - ${new Date().toLocaleDateString('es-DO')}</title>
+            <title>Cuadre de Caja - ${formatDateDMY(new Date())}</title>
             <style>
               html, body {
                 margin: 0 !important;
@@ -238,9 +316,9 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
               <div class="receipt-title">CUADRE DE CAJA</div>
               
               <div class="receipt-info">
-                <p><span>F. Inicio:</span> <span>${parseLocalDate(startStr).toLocaleDateString('es-DO')}</span></p>
-                <p><span>F. Fin:</span> <span>${parseLocalDate(endStr).toLocaleDateString('es-DO')}</span></p>
-                <p><span>Impreso:</span> <span>${new Date().toLocaleDateString('es-DO')} ${new Date().toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</span></p>
+                <p><span>F. Inicio:</span> <span>${formatDateTimeDMY(parseLocalDateTime(startStr))}</span></p>
+                <p><span>F. Fin:</span> <span>${formatDateTimeDMY(parseLocalDateTime(endStr))}</span></p>
+                <p><span>Impreso:</span> <span>${formatDateTimeDMY(new Date())}</span></p>
                 <p><span>Usuario:</span> <span>${currentUser?.name || ''}</span></p>
               </div>
               
@@ -270,6 +348,8 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
                   </tr>
                 </tbody>
               </table>
+              
+              ${productDetailsHtml}
               
               <div class="receipt-hr"></div>
               
@@ -311,26 +391,26 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
           {/* Controls */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
             <div>
-              <label htmlFor="startDate" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Fecha Desde
+              <label htmlFor="startDateTime" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Fecha / Hora Desde
               </label>
               <input
-                type="date"
-                id="startDate"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
+                type="datetime-local"
+                id="startDateTime"
+                value={startDateTime}
+                onChange={e => setStartDateTime(e.target.value)}
                 className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
               />
             </div>
             <div>
-              <label htmlFor="endDate" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Fecha Hasta
+              <label htmlFor="endDateTime" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Fecha / Hora Hasta
               </label>
               <input
-                type="date"
-                id="endDate"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
+                type="datetime-local"
+                id="endDateTime"
+                value={endDateTime}
+                onChange={e => setEndDateTime(e.target.value)}
                 className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
               />
             </div>
@@ -372,7 +452,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
                     <div key={s.id} className="p-3 flex justify-between items-center hover:bg-slate-50">
                       <div>
                         <p className="font-bold text-slate-800">Factura #{s.id}</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">{new Date(s.date).toLocaleDateString('es-DO')} {new Date(s.date).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{formatDateTimeDMY(s.date)}</p>
                       </div>
                       <span className="font-bold text-slate-800">${formatCurrency(s.total)}</span>
                     </div>
@@ -394,7 +474,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
                     <div key={e.id} className="p-3 flex justify-between items-center hover:bg-slate-50">
                       <div>
                         <p className="font-bold text-slate-800">{e.description}</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">{e.type} | {new Date(e.date).toLocaleDateString('es-DO')}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{e.type} | {formatDateDMY(e.date)}</p>
                       </div>
                       <span className="font-bold text-red-600">-${formatCurrency(e.amount)}</span>
                     </div>
