@@ -174,17 +174,17 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
       });
     });
 
-    const printedProductDetails = Object.values(productSummaryMap).filter(p => p.soldQty > 0);
+    const printedProductDetails = Object.values(productSummaryMap).sort((a, b) => a.name.localeCompare(b.name));
 
     const productDetailsHtml = printedProductDetails.length > 0 
       ? `
         <div class="receipt-hr"></div>
-        <div style="font-weight: bold; text-align: center; margin-bottom: 1.5mm; font-size: 8.5pt; text-transform: uppercase;">Detalle de Productos</div>
+        <div style="font-weight: bold; text-align: center; margin-bottom: 1.5mm; font-size: 8.5pt; text-transform: uppercase;">Inventario de Productos</div>
         <table class="receipt-summary-table" style="font-size: 8pt;">
           <thead>
             <tr style="border-bottom: 1px dashed #000; font-weight: bold;">
               <td>Producto</td>
-              <td style="text-align: center; width: 15mm;">Cant.</td>
+              <td style="text-align: center; width: 15mm;">Vend.</td>
               <td style="text-align: right; width: 15mm;">Stock</td>
             </tr>
           </thead>
