@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 import type { SaleItem, Room, Sale } from '../types';
 import { TrashIcon } from '../components/icons';
@@ -9,7 +9,7 @@ import CashCloseModal from '../components/CashCloseModal';
 import { formatCurrency } from '../utils';
 
 const SalesView: React.FC = () => {
-  const { products, rooms, addSale, currentUser } = useAppContext();
+  const { products, rooms, addSale, currentUser, sales, expenses } = useAppContext();
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [showInvoice, setShowInvoice] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
@@ -21,6 +21,26 @@ const SalesView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const isAdmin = currentUser?.role === 'ADMINISTRADOR';
+
+  // Calculate net balance for the current ongoing 6:00 AM cycle
+  const currentCycleNetBalance = useMemo(() => {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    let cycleStartDate = new Date(now);
+    if (currentHour < 6) {
+      cycleStartDate.setDate(now.getDate() - 1);
+    }
+    cycleStartDate.setHours(6, 0, 0, 0);
+
+    const periodSales = sales.filter(sale => new Date(sale.date) >= cycleStartDate);
+    const periodExpenses = expenses.filter(exp => new Date(exp.date) >= cycleStartDate);
+
+    const salesTotal = periodSales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+    const expensesTotal = periodExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+    return salesTotal - expensesTotal;
+  }, [sales, expenses]);
 
   const addToCart = (item: SaleItem) => {
     setCart(prev => [...prev, item]);
@@ -81,8 +101,8 @@ const SalesView: React.FC = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold text-slate-800">Nueva Venta</h1>
           <button 
             onClick={() => setIsCashCloseModalOpen(true)}
@@ -90,6 +110,10 @@ const SalesView: React.FC = () => {
           >
             📊 Cuadre de Caja
           </button>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md text-xs font-semibold shadow-sm">
+            <span>💵 Total en Caja (Ciclo Actual):</span>
+            <span className="font-extrabold text-sm text-emerald-950">${formatCurrency(currentCycleNetBalance)}</span>
+          </div>
         </div>
          <div className="w-full max-w-xs">
             <input

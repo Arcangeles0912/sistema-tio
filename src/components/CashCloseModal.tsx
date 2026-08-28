@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { formatCurrency } from '../utils';
 
@@ -10,7 +10,38 @@ interface CashCloseModalProps {
 const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
   const { sales, expenses, currentUser, settings, products } = useAppContext();
 
-  // Default dates to today's date in local YYYY-MM-DD
+  // Calculate suggested date range for the last full 24h cycle (6:00 AM to 5:59 AM)
+  const getSuggestedCycleRange = () => {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    let startDayDate = new Date(now);
+    let endDayDate = new Date(now);
+
+    if (currentHour >= 6) {
+      // Current cycle started today at 06:00.
+      // Last completed cycle started yesterday at 06:00 and ended today at 05:59.
+      startDayDate.setDate(now.getDate() - 1);
+    } else {
+      // Current cycle started yesterday at 06:00.
+      // Last completed cycle started 2 days ago at 06:00 and ended yesterday at 05:59.
+      startDayDate.setDate(now.getDate() - 2);
+      endDayDate.setDate(now.getDate() - 1);
+    }
+
+    const formatDateString = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    return {
+      start: `${formatDateString(startDayDate)}T06:00`,
+      end: `${formatDateString(endDayDate)}T05:59`
+    };
+  };
+
   const getTodayString = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -19,8 +50,16 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
     return `${year}-${month}-${day}`;
   };
 
-  const [startDateTime, setStartDateTime] = useState(`${getTodayString()}T00:00`);
-  const [endDateTime, setEndDateTime] = useState(`${getTodayString()}T23:59`);
+  const [startDateTime, setStartDateTime] = useState(() => getSuggestedCycleRange().start);
+  const [endDateTime, setEndDateTime] = useState(() => getSuggestedCycleRange().end);
+
+  useEffect(() => {
+    if (isOpen) {
+      const suggested = getSuggestedCycleRange();
+      setStartDateTime(suggested.start);
+      setEndDateTime(suggested.end);
+    }
+  }, [isOpen]);
 
   const parseLocalDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return new Date();
@@ -389,30 +428,46 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           
           {/* Controls */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-            <div>
-              <label htmlFor="startDateTime" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Fecha / Hora Desde
-              </label>
-              <input
-                type="datetime-local"
-                id="startDateTime"
-                value={startDateTime}
-                onChange={e => setStartDateTime(e.target.value)}
-                className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
-              />
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-3">
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Período de Cuadre</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const suggested = getSuggestedCycleRange();
+                  setStartDateTime(suggested.start);
+                  setEndDateTime(suggested.end);
+                }}
+                className="text-xs text-sky-700 hover:text-sky-900 font-semibold flex items-center gap-1 underline transition-colors"
+              >
+                🔄 Cargar último ciclo completo (06:00 AM - 05:59 AM)
+              </button>
             </div>
-            <div>
-              <label htmlFor="endDateTime" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Fecha / Hora Hasta
-              </label>
-              <input
-                type="datetime-local"
-                id="endDateTime"
-                value={endDateTime}
-                onChange={e => setEndDateTime(e.target.value)}
-                className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="startDateTime" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Fecha / Hora Desde
+                </label>
+                <input
+                  type="datetime-local"
+                  id="startDateTime"
+                  value={startDateTime}
+                  onChange={e => setStartDateTime(e.target.value)}
+                  className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 bg-white"
+                />
+              </div>
+              <div>
+                <label htmlFor="endDateTime" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Fecha / Hora Hasta
+                </label>
+                <input
+                  type="datetime-local"
+                  id="endDateTime"
+                  value={endDateTime}
+                  onChange={e => setEndDateTime(e.target.value)}
+                  className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 bg-white"
+                />
+              </div>
             </div>
           </div>
 
