@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SalesIcon, InventoryIcon, RoomsIcon, AnalyticsIcon, LogoutIcon, UsersIcon, SettingsIcon, CloseIcon, HomeIcon, ShiftsIcon, AuditIcon, BillingIcon, SuperAdminIcon, RequestsIcon } from './icons';
 import type { View, User } from '../types';
+import { useAppContext } from '../context/AppContext';
+import { getRoomUsageInfo } from '../utils';
 
 interface SidebarProps {
   user: User;
@@ -10,6 +12,7 @@ interface SidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (isOpen: boolean) => void;
 }
+
 
 const ALL_NAV_ITEMS: { view: View; label: string; icon: React.ReactNode; roles: User['role'][] }[] = [
     { view: 'DASHBOARD', label: 'Resumen', icon: <HomeIcon className="h-5 w-5" />, roles: ['ADMINISTRADOR'] },
@@ -25,6 +28,22 @@ const ALL_NAV_ITEMS: { view: View; label: string; icon: React.ReactNode; roles: 
 ];
 
 export default function Sidebar({ user, currentView, setCurrentView, onLogout, isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
+  const { rooms } = useAppContext();
+
+  const roomAlertCount = useMemo(() => {
+    if (!rooms || rooms.length === 0) return 0;
+    const occupied = rooms.filter(r => r.status === 'no disponible' && r.occupied_at);
+    let count = 0;
+    occupied.forEach(r => {
+      const usage = getRoomUsageInfo(r.occupied_at!);
+      if (usage.status === 'warning' || usage.status === 'expired') {
+        count++;
+      }
+    });
+    return count;
+  }, [rooms]);
+
+
   const navItems = ALL_NAV_ITEMS.filter(item => {
     if (!item.roles.includes(user.role)) return false;
     if (user.organization.plan === 'free' && (item.view === 'ANALYTICS' || item.view === 'AUDIT')) return false;
@@ -110,6 +129,11 @@ export default function Sidebar({ user, currentView, setCurrentView, onLogout, i
                 {currentView === item.view && <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-6 w-1 bg-amber-400 rounded-r-md"></div>}
                 <span className={`mr-3 ${currentView === item.view ? 'text-white' : 'text-slate-400 group-hover:text-amber-400'}`}>{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
+                {item.view === 'ROOMS' && roomAlertCount > 0 && (
+                  <span className="ml-auto px-2 py-0.5 text-[10px] font-black bg-amber-500 text-slate-950 rounded-full animate-pulse shadow-sm">
+                    {roomAlertCount}
+                  </span>
+                )}
                 </button>
             ))}
           </div>

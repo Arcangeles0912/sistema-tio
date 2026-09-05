@@ -6,7 +6,7 @@ import RoomClearingModal from '../components/RoomClearingModal';
 import RoomLogHistory from '../components/RoomLogHistory';
 import RoomTimer from '../components/RoomTimer';
 import type { Room, RoomClearingStatus } from '../types';
-import { formatCurrency } from '../utils';
+import { formatCurrency, getRoomUsageInfo } from '../utils';
 
 const RoomsView: React.FC = () => {
   const { rooms, clearRoom, deleteRoom, currentUser, roomLogs, sales } = useAppContext();
@@ -112,18 +112,39 @@ const RoomsView: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {rooms.map(room => {
-            const lastSaleDate = occupiedRoomSaleDates.get(room.id);
+            const lastSaleDate = room.occupied_at ? new Date(room.occupied_at) : occupiedRoomSaleDates.get(room.id);
             const isOccupied = room.status === 'no disponible';
             const canBeClearedByUser = isOccupied && canClearRooms;
+            const usageInfo = isOccupied && lastSaleDate ? getRoomUsageInfo(lastSaleDate) : null;
+
+            let cardBgClass = 'bg-teal-600 hover:bg-teal-700';
+            let badgeText = 'Disponible';
+            let badgeClass = 'bg-white/25 text-white';
+
+            if (isOccupied) {
+              if (usageInfo?.status === 'expired') {
+                cardBgClass = 'bg-gradient-to-br from-rose-700 to-red-900 border-2 border-rose-400 shadow-lg shadow-rose-950/40';
+                badgeText = '🚨 Tiempo Excedido (4h)';
+                badgeClass = 'bg-rose-950/80 text-rose-200 border border-rose-400/50 animate-pulse';
+              } else if (usageInfo?.status === 'warning') {
+                cardBgClass = 'bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 shadow-lg shadow-amber-950/40';
+                badgeText = '⚠️ Quedan < 10 min';
+                badgeClass = 'bg-amber-950/80 text-amber-200 border border-amber-300/50 animate-pulse';
+              } else {
+                cardBgClass = 'bg-slate-600';
+                badgeText = 'Ocupada';
+                badgeClass = 'bg-black/30 text-white/90';
+              }
+
+              if (canBeClearedByUser) {
+                cardBgClass += ' cursor-pointer hover:brightness-110';
+              }
+            }
 
             return (
             <div
               key={room.id}
-              className={`relative group p-4 md:p-6 rounded-lg shadow-sm text-white transition-all ${
-                isOccupied
-                  ? `bg-slate-500 ${canBeClearedByUser ? 'cursor-pointer hover:bg-slate-600' : ''}`
-                  : 'bg-teal-500'
-              }`}
+              className={`relative group p-4 md:p-6 rounded-xl shadow-md text-white transition-all transform hover:-translate-y-0.5 ${cardBgClass}`}
               onClick={canBeClearedByUser ? () => handleRoomClick(room) : undefined}
             >
               {isAdmin && (
@@ -144,20 +165,24 @@ const RoomsView: React.FC = () => {
                   </button>
                   </div>
               )}
-              <div className="flex justify-between items-start">
-                <h3 className="text-xl font-bold">{room.number}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div>
+                  <span className="text-xs uppercase tracking-wider text-white/70 block">Habitación</span>
+                  <h3 className="text-2xl font-black">{room.number}</h3>
+                </div>
                 <div className="text-right">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    room.status === 'disponible' ? 'bg-white/25' : 'bg-black/20'
-                  }`}>
-                    {room.status === 'disponible' ? 'Disponible' : 'No Disponible'}
+                  <span className={`px-2.5 py-1 text-xs font-bold rounded-full inline-block ${badgeClass}`}>
+                    {badgeText}
                   </span>
                    {room.status === 'no disponible' && lastSaleDate && (
                       <RoomTimer soldAt={lastSaleDate} />
                     )}
                 </div>
               </div>
-              <p className="mt-4 text-2xl font-light">${formatCurrency(room.price)}</p>
+              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                <span className="text-xs text-white/80">Tarifa:</span>
+                <p className="text-xl font-bold">${formatCurrency(room.price)}</p>
+              </div>
             </div>
           )})}
         </div>

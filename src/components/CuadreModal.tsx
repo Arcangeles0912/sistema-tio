@@ -122,7 +122,7 @@ const CuadreModal: React.FC<CuadreModalProps> = ({ isOpen, onClose }) => {
           </head>
           <body>
             <div class="receipt">
-              <div class="receipt-logo">${settings.logo_text || 'LevelBlack'}</div>
+              <div class="receipt-logo">${settings.logo_text || 'Cabañas y Hotel Subway'}</div>
               <div class="receipt-header">
                 ${settings.address ? `<p>${settings.address}</p>` : ''}
                 ${settings.rnc ? `<p>RNC: ${settings.rnc}</p>` : ''}

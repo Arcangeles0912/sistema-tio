@@ -90,7 +90,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [sales, setSales] = useState<Sale[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [settings, setSettings] = useState<Settings>({ logo_text: 'LevelBlack V2', address: '', rnc: '' });
+  const [settings, setSettings] = useState<Settings>({ logo_text: 'Cabañas y Hotel Subway', address: '', rnc: '' });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -125,7 +125,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const results = await Promise.all(fetchPromises);
         
         setProducts(results[0].map((p: Product) => ({ ...p, price: Number(p.price) })));
-        setRooms(results[1].map((r: Room) => ({ ...r, price: Number(r.price) })));
+        setRooms(results[1].map((r: any) => ({ ...r, price: Number(r.price), occupied_at: r.occupied_at ? new Date(r.occupied_at) : null })));
         setUsers(results[2]);
         setSales(results[3].map((s: Sale) => ({
             ...s,
@@ -176,7 +176,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuditLogs([]);
     setSuperAdminOrganizations([]);
     setSuperAdminUpgradeRequests([]);
-    setSettings({ logo_text: 'LevelBlack V2', address: '', rnc: '' });
+    setSettings({ logo_text: 'Cabañas y Hotel Subway', address: '', rnc: '' });
   }, []);
 
   const checkUserSession = useCallback(async () => {
@@ -322,7 +322,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const userIdParam = `?userId=${currentUser.id}`;
 
                 if (resources.includes('rooms')) {
-                    apiFetch(`/rooms${userIdParam}`).then(roomsData => setRooms(roomsData.map((r: Room) => ({ ...r, price: Number(r.price) })))).catch(e => console.error("WS failed to fetch rooms:", e));
+                    apiFetch(`/rooms${userIdParam}`).then(roomsData => setRooms(roomsData.map((r: any) => ({ ...r, price: Number(r.price), occupied_at: r.occupied_at ? new Date(r.occupied_at) : null })))).catch(e => console.error("WS failed to fetch rooms:", e));
                 }
                 if (resources.includes('sales')) {
                     apiFetch(`/sales${userIdParam}`).then(salesData => setSales(salesData.map((s: Sale) => ({

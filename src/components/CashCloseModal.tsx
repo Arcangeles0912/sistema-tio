@@ -347,7 +347,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
           </head>
           <body>
             <div class="receipt">
-              <div class="receipt-logo">${settings.logo_text || 'LevelBlack'}</div>
+              <div class="receipt-logo">${settings.logo_text || 'Cabañas y Hotel Subway'}</div>
               <div class="receipt-header">
                 ${settings.address ? `<p>${settings.address}</p>` : ''}
                 ${settings.rnc ? `<p>RNC: ${settings.rnc}</p>` : ''}
@@ -394,7 +394,7 @@ const CashCloseModal: React.FC<CashCloseModalProps> = ({ isOpen, onClose }) => {
               
               <div class="receipt-footer">
                 <p>Cierre de Turno de Caja</p>
-                <p>${settings.logo_text || 'LevelBlack'} Hotel Management</p>
+                <p>${settings.logo_text || 'Cabañas y Hotel Subway'}</p>
               </div>
             </div>
           </body>

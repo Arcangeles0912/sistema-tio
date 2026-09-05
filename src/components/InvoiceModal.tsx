@@ -134,7 +134,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, sale }) =>
           </head>
           <body>
             <div class="receipt">
-              <div class="receipt-logo">${settings.logo_text || 'LevelBlack'}</div>
+              <div class="receipt-logo">${settings.logo_text || 'Cabañas y Hotel Subway'}</div>
               ${settings.rnc ? `<div class="receipt-sub">RNC: ${settings.rnc}</div>` : ''}
               ${settings.address ? `<div class="receipt-sub">${settings.address}</div>` : ''}
               
@@ -204,7 +204,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, sale }) =>
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-start pt-8 p-4 overflow-y-auto">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-xs">
         <div ref={invoiceRef} className="p-4 bg-white text-black font-mono text-xs border-b">
-          <div className="text-center font-bold text-base uppercase mb-1">{settings.logo_text || 'LevelBlack'}</div>
+          <div className="text-center font-bold text-base uppercase mb-1">{settings.logo_text || 'Cabañas y Hotel Subway'}</div>
           {settings.rnc && <div className="text-center text-[10px] text-gray-600">RNC: {settings.rnc}</div>}
           {settings.address && <div className="text-center text-[10px] text-gray-600 mb-1">{settings.address}</div>}
 

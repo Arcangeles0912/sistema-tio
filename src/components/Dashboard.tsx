@@ -12,8 +12,10 @@ import AuditView from '../views/AuditView'; // New import
 import BillingView from '../views/BillingView'; // New import
 import SuperAdminView from '../views/SuperAdminView'; // New import
 import SuperAdminRequestsView from '../views/SuperAdminRequestsView'; // New import
+import RoomAlertBanner from './RoomAlertBanner';
 import type { View, User } from '../types';
 import { MenuIcon } from './icons';
+
 
 interface DashboardProps {
   user: User;
@@ -126,6 +128,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <div className="w-6"></div> {/* Spacer to balance the title */}
         </header>
 
+        {/* Global Room Time Limit Monitor & Alert Ribbon */}
+        <RoomAlertBanner onNavigateToRooms={() => setCurrentView('ROOMS')} />
+
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           <div className="container mx-auto px-4 md:px-6 py-8">
             {renderView()}
@@ -136,4 +141,4 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   );
 };
 
-export default Dashboard;
+export default Dashboard;

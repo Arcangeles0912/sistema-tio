@@ -122,11 +122,11 @@ app.get('/api/public-settings', async (req, res) => {
         const result = await pool.query("SELECT setting_key, setting_value FROM settings WHERE organization_id = 1 AND (setting_key = 'logo_text' OR setting_key = 'has_custom_logo' OR setting_key = 'has_custom_favicon')");
         const settings = result.rows.reduce((acc, row) => ({ ...acc, [row.setting_key]: row.setting_value }), {});
         res.json({ 
-            logoText: settings.logo_text || 'LevelBlack V2', 
+            logoText: settings.logo_text || 'Cabañas y Hotel Subway', 
             hasCustomLogo: settings.has_custom_logo === 'true',
             hasCustomFavicon: settings.has_custom_favicon === 'true'
         });
-    } catch (err) { res.status(500).json({ logoText: 'LevelBlack V2' }); }
+    } catch (err) { res.status(500).json({ logoText: 'Cabañas y Hotel Subway' }); }
 });
 
 app.get('/api/images/:name', (req, res) => {
@@ -317,7 +317,7 @@ app.delete('/api/rooms/:id', async (req, res) => {
 app.post('/api/rooms/:id/clear', async (req, res) => {
     const { clearingStatus, userId } = req.body;
     const orgId = await getOrgId(userId);
-    await pool.query("UPDATE rooms SET status = 'disponible' WHERE id = $1 AND organization_id = $2", [req.params.id, orgId]);
+    await pool.query("UPDATE rooms SET status = 'disponible', occupied_at = NULL WHERE id = $1 AND organization_id = $2", [req.params.id, orgId]);
     broadcastToOrg(orgId, { type: 'data_changed', payload: { resources: ['rooms'] } });
     res.json({ success: true });
 });
@@ -332,7 +332,7 @@ app.post('/api/sales', async (req, res) => {
     for (const item of items) {
         await pool.query('INSERT INTO sale_items (sale_id, name, price, plate_number, item_type, item_id) VALUES ($1, $2, $3, $4, $5, $6)', [saleId, item.name, item.price, item.plateNumber, item.type, item.id]);
         if (item.type === 'product') await pool.query('UPDATE products SET stock = stock - 1 WHERE id = $1', [item.id]);
-        if (item.type === 'room') await pool.query("UPDATE rooms SET status = 'no disponible' WHERE id = $1", [item.id]);
+        if (item.type === 'room') await pool.query("UPDATE rooms SET status = 'no disponible', occupied_at = NOW() WHERE id = $1", [item.id]);
     }
     broadcastToOrg(orgId, { type: 'data_changed', payload: { resources: ['sales', 'products', 'rooms'] } });
     res.json({ id: saleId, date: saleRes.rows[0].date, total });

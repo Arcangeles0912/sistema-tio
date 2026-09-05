@@ -1,44 +1,44 @@
 import React, { useState, useEffect } from 'react';
+import { getRoomUsageInfo, RoomUsageInfo } from '../utils';
 
 interface RoomTimerProps {
   soldAt: Date;
 }
 
-const formatElapsedTime = (startTime: Date): string => {
-  const now = new Date();
-  // Ensure startTime is a Date object
-  const start = new Date(startTime);
-  if (isNaN(start.getTime())) {
-    return '00:00:00';
-  }
-
-  const elapsedMs = now.getTime() - start.getTime();
-  if (elapsedMs < 0) return '00:00:00';
-
-  const totalSeconds = Math.floor(elapsedMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-  const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-
-  return `${hours}:${minutes}:${seconds}`;
-};
-
 const RoomTimer: React.FC<RoomTimerProps> = ({ soldAt }) => {
-  const [elapsedTime, setElapsedTime] = useState(() => formatElapsedTime(soldAt));
+  const [usageInfo, setUsageInfo] = useState<RoomUsageInfo>(() => getRoomUsageInfo(soldAt));
 
   useEffect(() => {
+    setUsageInfo(getRoomUsageInfo(soldAt));
     const intervalId = setInterval(() => {
-      setElapsedTime(formatElapsedTime(soldAt));
+      setUsageInfo(getRoomUsageInfo(soldAt));
     }, 1000);
 
     return () => clearInterval(intervalId);
   }, [soldAt]);
 
   return (
-    <p className="mt-1 text-xs text-white/90" aria-live="off">
-      <span className="font-semibold">Tiempo:</span> {elapsedTime}
-    </p>
+    <div className="mt-1 text-xs" aria-live="off">
+      <p className="text-white/95 font-medium">
+        <span className="font-bold">Uso:</span> {usageInfo.formattedElapsed}
+      </p>
+      {usageInfo.status === 'warning' && (
+        <p className="mt-0.5 font-bold text-amber-200 bg-black/25 px-1.5 py-0.5 rounded inline-block animate-pulse">
+          ⚠️ Quedan: {usageInfo.formattedRemaining}
+        </p>
+      )}
+      {usageInfo.status === 'expired' && (
+        <p className="mt-0.5 font-bold text-rose-200 bg-black/35 px-1.5 py-0.5 rounded inline-block animate-pulse">
+          🚨 Excedido: {usageInfo.formattedRemaining}
+        </p>
+      )}
+      {usageInfo.status === 'normal' && (
+        <p className="text-[11px] text-white/70">
+          Restan: {usageInfo.formattedRemaining}
+        </p>
+      )}
+    </div>
   );
 };
 
-export default RoomTimer;
+export default RoomTimer;

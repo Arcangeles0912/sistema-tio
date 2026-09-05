@@ -14,7 +14,9 @@ export interface Room {
   number: string;
   price: number;
   status: RoomStatus;
+  occupied_at?: string | Date | null;
 }
+
 
 export interface SaleItem {
   id: number;

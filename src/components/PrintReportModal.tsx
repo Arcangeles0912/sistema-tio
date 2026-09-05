@@ -128,7 +128,7 @@ const PrintReportModal: React.FC<PrintReportModalProps> = ({ isOpen, onClose }) 
           </head>
           <body>
             <div class="receipt">
-              <div class="receipt-logo">${settings.logo_text || 'LevelBlack'}</div>
+              <div class="receipt-logo">${settings.logo_text || 'Cabañas y Hotel Subway'}</div>
               <div class="receipt-header">
                 <p>REPORTE DE VENTAS</p>
                 <p>${rangeText}</p>

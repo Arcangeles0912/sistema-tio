@@ -126,15 +126,32 @@ const runMigrations = async (client) => {
     await addColumnIfNotExists(client, 'sale_items', 'item_type', 'VARCHAR(20)');
     await addColumnIfNotExists(client, 'sale_items', 'item_id', 'INTEGER');
 
+    // rooms columns
+    await addColumnIfNotExists(client, 'rooms', 'occupied_at', 'TIMESTAMPTZ');
+
     // expenses columns
     await addColumnIfNotExists(client, 'expenses', 'type', 'VARCHAR(50)');
     await addColumnIfNotExists(client, 'expenses', 'date', 'TIMESTAMPTZ DEFAULT NOW()');
 
+    // Backfill occupied_at for currently occupied rooms without timestamp
+    await client.query(`
+        UPDATE rooms r 
+        SET occupied_at = COALESCE(
+            (SELECT s.date FROM sales s JOIN sale_items si ON s.id = si.sale_id WHERE si.item_type = 'room' AND si.item_id = r.id ORDER BY s.date DESC LIMIT 1),
+            NOW()
+        )
+        WHERE r.status = 'no disponible' AND r.occupied_at IS NULL
+    `);
+
+
     // Ensure default organization exists before inserting settings
     await client.query(`
         INSERT INTO organizations (id, name, plan)
-        VALUES (1, 'LevelBlack Principal', 'corporate')
-        ON CONFLICT (id) DO NOTHING
+        VALUES (1, 'Cabañas y Hotel Subway', 'corporate')
+        ON CONFLICT (id) DO UPDATE SET name = CASE 
+            WHEN organizations.name LIKE 'LevelBlack%' THEN 'Cabañas y Hotel Subway'
+            ELSE organizations.name
+        END
     `);
 
     // Track the current schema version in settings
@@ -142,6 +159,16 @@ const runMigrations = async (client) => {
         INSERT INTO settings (organization_id, setting_key, setting_value)
         VALUES (1, 'schema_version', '2.1.0')
         ON CONFLICT (organization_id, setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value
+    `);
+
+    // Ensure default logo_text in settings
+    await client.query(`
+        INSERT INTO settings (organization_id, setting_key, setting_value)
+        VALUES (1, 'logo_text', 'Cabañas y Hotel Subway')
+        ON CONFLICT (organization_id, setting_key) DO UPDATE SET setting_value = CASE 
+            WHEN settings.setting_value LIKE 'LevelBlack%' THEN 'Cabañas y Hotel Subway'
+            ELSE settings.setting_value
+        END
     `);
 };
 
@@ -153,8 +180,11 @@ const ensureAdminAccess = async (client) => {
 
         await client.query(`
             INSERT INTO organizations (id, name, plan) 
-            VALUES (1, 'LevelBlack Principal', 'corporate') 
-            ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name
+            VALUES (1, 'Cabañas y Hotel Subway', 'corporate') 
+            ON CONFLICT (id) DO UPDATE SET name = CASE
+                WHEN organizations.name LIKE 'LevelBlack%' THEN 'Cabañas y Hotel Subway'
+                ELSE organizations.name
+            END
         `);
         
         await client.query("SELECT setval('organizations_id_seq', (SELECT MAX(id) FROM organizations))");

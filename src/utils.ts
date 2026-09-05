@@ -100,3 +100,118 @@ export const calculateWeeklySchedule = (
 
     return schedule;
 };
+
+// --- Room Usage & 4-Hour Time Limit Helpers ---
+
+export const ROOM_SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
+export const ROOM_WARNING_THRESHOLD_MS = 10 * 60 * 1000;    // 10 minutes
+export const ROOM_WARNING_TRIGGER_MS = ROOM_SESSION_DURATION_MS - ROOM_WARNING_THRESHOLD_MS; // 3h 50m
+
+export type RoomTimeStatus = 'normal' | 'warning' | 'expired';
+
+export interface RoomUsageInfo {
+  status: RoomTimeStatus;
+  elapsedMs: number;
+  remainingMs: number;
+  formattedElapsed: string;
+  formattedRemaining: string;
+  minutesRemaining: number;
+}
+
+export const getRoomUsageInfo = (startTimeInput: Date | string | number): RoomUsageInfo => {
+  const start = new Date(startTimeInput);
+  const now = new Date();
+  
+  if (isNaN(start.getTime())) {
+    return {
+      status: 'normal',
+      elapsedMs: 0,
+      remainingMs: ROOM_SESSION_DURATION_MS,
+      formattedElapsed: '00:00:00',
+      formattedRemaining: '04:00:00',
+      minutesRemaining: 240,
+    };
+  }
+
+  const elapsedMs = Math.max(0, now.getTime() - start.getTime());
+  const remainingMs = ROOM_SESSION_DURATION_MS - elapsedMs;
+
+  const totalElapsedSec = Math.floor(elapsedMs / 1000);
+  const elpHours = Math.floor(totalElapsedSec / 3600).toString().padStart(2, '0');
+  const elpMinutes = Math.floor((totalElapsedSec % 3600) / 60).toString().padStart(2, '0');
+  const elpSeconds = (totalElapsedSec % 60).toString().padStart(2, '0');
+  const formattedElapsed = `${elpHours}:${elpMinutes}:${elpSeconds}`;
+
+  let status: RoomTimeStatus = 'normal';
+  let formattedRemaining = '';
+
+  if (elapsedMs >= ROOM_SESSION_DURATION_MS) {
+    status = 'expired';
+    const overdueMs = elapsedMs - ROOM_SESSION_DURATION_MS;
+    const totalOverdueSec = Math.floor(overdueMs / 1000);
+    const odHours = Math.floor(totalOverdueSec / 3600).toString().padStart(2, '0');
+    const odMinutes = Math.floor((totalOverdueSec % 3600) / 60).toString().padStart(2, '0');
+    const odSeconds = (totalOverdueSec % 60).toString().padStart(2, '0');
+    formattedRemaining = odHours !== '00' ? `+${odHours}:${odMinutes}:${odSeconds}` : `+${odMinutes}:${odSeconds}`;
+  } else if (elapsedMs >= ROOM_WARNING_TRIGGER_MS) {
+    status = 'warning';
+    const remSec = Math.max(0, Math.floor(remainingMs / 1000));
+    const remMinutes = Math.floor(remSec / 60).toString().padStart(2, '0');
+    const remSeconds = (remSec % 60).toString().padStart(2, '0');
+    formattedRemaining = `${remMinutes}:${remSeconds}`;
+  } else {
+    status = 'normal';
+    const remSec = Math.max(0, Math.floor(remainingMs / 1000));
+    const remHours = Math.floor(remSec / 3600).toString().padStart(2, '0');
+    const remMinutes = Math.floor((remSec % 3600) / 60).toString().padStart(2, '0');
+    const remSeconds = (remSec % 60).toString().padStart(2, '0');
+    formattedRemaining = `${remHours}:${remMinutes}:${remSeconds}`;
+  }
+
+  const minutesRemaining = Math.max(0, Math.ceil(remainingMs / 60000));
+
+  return {
+    status,
+    elapsedMs,
+    remainingMs,
+    formattedElapsed,
+    formattedRemaining,
+    minutesRemaining,
+  };
+};
+
+export const playAlertChime = () => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+    const playTone = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.exponentialRampToValueAtTime(0.25, start + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(start);
+      osc.stop(start + duration);
+    };
+
+    // Play attention-grabbing 2-tone melodic chime
+    playTone(587.33, now, 0.35);        // D5
+    playTone(880.00, now + 0.15, 0.55); // A5
+  } catch (e) {
+    console.warn('Audio alert could not be played:', e);
+  }
+};
